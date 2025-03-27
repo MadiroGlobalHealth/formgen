@@ -145,7 +145,7 @@ def main():
     if uploaded_file is not None:
         
         # Save the uploaded file
-        with st.spinner('Processing file...'):
+        with st.spinner('Processing file... Please wait.'):
             # Create uploads directory if it doesn't exist
             os.makedirs('uploads', exist_ok=True)
             
@@ -172,16 +172,17 @@ def main():
                 st.stop()
         
         # Initialize option sets from the uploaded file
-        try:
-            initialize_option_sets(temp_file_path)
-        except zipfile.BadZipFile:
-            st.error("The uploaded file appears to be corrupted or not a valid Excel file.")
-            st.info("Please try re-saving your Excel file or creating a new one. Make sure to save it in .xlsx format.")
-            st.stop()
-        except Exception as e:
-            st.error(f"Error initializing option sets: {str(e)}")
-            st.info("Please ensure your Excel file has a sheet named 'OptionSets' with the expected format.")
-            st.stop()
+        with st.spinner('Initializing option sets... Please wait.'):
+            try:
+                initialize_option_sets(temp_file_path)
+            except zipfile.BadZipFile:
+                st.error("The uploaded file appears to be corrupted or not a valid Excel file.")
+                st.info("Please try re-saving your Excel file or creating a new one. Make sure to save it in .xlsx format.")
+                st.stop()
+            except Exception as e:
+                st.error(f"Error initializing option sets: {str(e)}")
+                st.info("Please ensure your Excel file has a sheet named 'OptionSets' with the expected format.")
+                st.stop()
         
         # Update environment variable for metadata file path
         os.environ['METADATA_FILEPATH'] = temp_file_path
@@ -212,13 +213,16 @@ def main():
             st.info(f"Selected {len(selected_sheets)} sheets: {', '.join(selected_sheets)}")
 
         # Generate forms button
-        if st.button("Generate Forms", type="primary") or st.session_state.forms_generated:
+        generate_button = st.button("Generate Forms", type="primary")
+        
+        if generate_button or st.session_state.forms_generated:
             if not selected_sheets and not st.session_state.forms_generated:
                 st.warning("Please select at least one sheet")
             else:
-                # Only generate forms if they haven't been generated yet
-                if not st.session_state.forms_generated:
-                    with st.spinner('Generating forms...'):
+                # Only generate forms if they haven't been generated yet or if the button was just clicked
+                if generate_button and not st.session_state.forms_generated:
+                    # Create a full-page spinner overlay
+                    with st.spinner('Generating forms... Please wait, this may take a few minutes.'):
                         st.session_state.temp_file_path = temp_file_path
                         st.session_state.selected_sheets = selected_sheets
                         st.session_state.generated_forms = generate_forms_from_sheets(temp_file_path, selected_sheets)
@@ -237,22 +241,13 @@ def main():
                         # Use the JSON stored in session state
                         form_json = form['form_json']
                         
-                        # Two buttons for form JSON: Download and Copy
-                        btn_col1, btn_col2 = st.columns(2)
-                        with btn_col1:
-                            st.download_button(
-                                label="Download JSON",
-                                data=form_json,
-                                file_name=os.path.basename(form['form_path']),
-                                mime='application/json'
-                            )
-                        with btn_col2:
-                            if st.button("Copy JSON", key=f"copy_form_{form['sheet']}"):
-                                st.session_state[f"show_copy_form_{form['sheet']}"] = not st.session_state.get(f"show_copy_form_{form['sheet']}", False)
-                        
-                        # Always include the JSON in the page but keep it hidden by default
-                        with st.expander("Copy Form JSON", expanded=st.session_state.get(f"show_copy_form_{form['sheet']}", False)):
-                            st.code(form_json, language="json")
+                        # Only keep the download button
+                        st.download_button(
+                            label="Download Form JSON",
+                            data=form_json,
+                            file_name=os.path.basename(form['form_path']),
+                            mime='application/json'
+                        )
                     
                     with col2:
                         st.metric("Total Answers", form['total_answers'])
@@ -260,22 +255,13 @@ def main():
                         # Use the JSON stored in session state
                         translation_json = form['translation_json']
                         
-                        # Two buttons for translation JSON: Download and Copy
-                        btn_col1, btn_col2 = st.columns(2)
-                        with btn_col1:
-                            st.download_button(
-                                label="Download JSON",
-                                data=translation_json,
-                                file_name=os.path.basename(form['translation_path']),
-                                mime='application/json'
-                            )
-                        with btn_col2:
-                            if st.button("Copy JSON", key=f"copy_trans_{form['sheet']}"):
-                                st.session_state[f"show_copy_trans_{form['sheet']}"] = not st.session_state.get(f"show_copy_trans_{form['sheet']}", False)
-                        
-                        # Always include the JSON in the page but keep it hidden by default
-                        with st.expander("Copy Translation JSON", expanded=st.session_state.get(f"show_copy_trans_{form['sheet']}", False)):
-                            st.code(translation_json, language="json")
+                        # Only keep the download button
+                        st.download_button(
+                            label="Download Translation JSON",
+                            data=translation_json,
+                            file_name=os.path.basename(form['translation_path']),
+                            mime='application/json'
+                        )
                     
                     st.markdown("---")  # Add a separator between forms
 
