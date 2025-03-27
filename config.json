@@ -1,0 +1,9 @@
+{
+    "columns": {
+        "TOOLTIP_COLUMN_NAME": "Tooltip",
+        "TRANSLATION_SECTION_COLUMN": "Translation - Section",
+        "TRANSLATION_QUESTION_COLUMN": "Translation - Question", 
+        "TRANSLATION_TOOLTIP_COLUMN": "Translation - Tooltip",
+        "TRANSLATION_ANSWER_COLUMN": "Translation"
+    }
+}

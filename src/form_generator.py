@@ -8,27 +8,37 @@ import time
 import uuid
 import openpyxl
 import pandas as pd
+import zipfile
 from dotenv import load_dotenv
 
 # Load the environment variables
 load_dotenv()
-
-# Ignore potential warnings related to opening large Excel files
-openpyxl.reader.excel.warnings.simplefilter(action='ignore')
 
 # Load the configuration settings from config.json
 with open('config.json', 'r', encoding='utf-8') as f:
     config = json.load(f)
 
 # Extract the configuration settings
-METADATA_FILE = os.getenv('METADATA_FILEPATH', './metadata_example.xlsx')
-TRANSLATION_SECTION_COLUMN = 'Translation - Section'
-TRANSLATION_QUESTION_COLUMN = 'Translation - Question'
-TRANSLATION_TOOLTIP_COLUMN = 'Translation - Tooltip'
-TRANSLATION_ANSWER_COLUMN = 'Translation'
+METADATA_FILE = os.getenv('METADATA_FILEPATH')
+if not METADATA_FILE or METADATA_FILE.strip() == '':
+    # If environment variable is not set, just initialize to empty
+    METADATA_FILE = ''
+    print(f"Warning: METADATA_FILEPATH environment variable not set. Please set it before using the generator functions.")
+
+# Extract other configuration settings from config
+TRANSLATION_SECTION_COLUMN = config.get('columns', {}).get('TRANSLATION_SECTION_COLUMN', 'Translation - Section')
+TRANSLATION_QUESTION_COLUMN = config.get('columns', {}).get('TRANSLATION_QUESTION_COLUMN', 'Translation - Question')
+TRANSLATION_TOOLTIP_COLUMN = config.get('columns', {}).get('TRANSLATION_TOOLTIP_COLUMN', 'Translation - Tooltip')
+TRANSLATION_ANSWER_COLUMN = config.get('columns', {}).get('TRANSLATION_ANSWER_COLUMN', 'Translation')
 
 # Since tooltip name is different in metadata, extract it form Configuration
 TOOLTIP_COLUMN_NAME = config.get('columns', {}).get('TOOLTIP_COLUMN_NAME')
+
+# Define option_sets as None initially
+option_sets = None
+
+# Initialize ALL_QUESTIONS_ANSWERS as an empty list
+ALL_QUESTIONS_ANSWERS = []
 
 def read_excel_skip_strikeout(filepath, sheet_name=0, header_row=1):
     """
@@ -40,57 +50,114 @@ def read_excel_skip_strikeout(filepath, sheet_name=0, header_row=1):
     :param header_row: Which row in Excel is the header (1-based index)
     :return: Pandas DataFrame with rows containing strikethrough removed
     """
-    # Load workbook (use data_only=True if you only need computed values)
-    wb = openpyxl.load_workbook(filepath, data_only=True)
-    ws = wb[sheet_name]
+    print(f"Reading sheet '{sheet_name}' from file: '{filepath}'")
+    
+    if not filepath or filepath.strip() == '':
+        raise ValueError("Empty file path provided. Please check your METADATA_FILEPATH environment variable.")
+        
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"Excel file not found: '{filepath}'")
+        
+    try:
+        # Load workbook (use data_only=True if you only need computed values)
+        wb = openpyxl.load_workbook(filepath, data_only=True)
+        ws = wb[sheet_name]
 
-    # Convert 1-based to 0-based index for Python lists
-    header_idx = header_row - 1
+        # Convert 1-based to 0-based index for Python lists
+        header_idx = header_row - 1
 
-    # Grab all rows as openpyxl cell objects (not values_only=True,
-    # so we can read formatting info).
-    all_rows = list(ws.iter_rows())
+        # Grab all rows as openpyxl cell objects (not values_only=True,
+        # so we can read formatting info).
+        all_rows = list(ws.iter_rows())
 
-    # Identify the header row cells and extract the column names
-    header_cells = all_rows[header_idx]
-    column_names = [cell.value for cell in header_cells]
+        # Identify the header row cells and extract the column names
+        header_cells = all_rows[header_idx]
+        column_names = [cell.value for cell in header_cells]
 
-    data = []
-    # Iterate over the remaining rows after the header
-    for row_idx in range(header_idx + 1, len(all_rows)):
-        row_cells = all_rows[row_idx]
-        row_has_strike = False
-        row_values = []
+        data = []
+        # Iterate over the remaining rows after the header
+        for row_idx in range(header_idx + 1, len(all_rows)):
+            row_cells = all_rows[row_idx]
+            row_has_strike = False
+            row_values = []
 
-        for cell in row_cells:
-            # Check if the cell has a font and if that font uses strikethrough
-            if sheet_name == 'OptionSets':
-                if cell.font and cell.font.strike:
-                    row_has_strike = True
-                    break  # No need to check other cells in this row
-            else:
-                question_cell = row_cells[column_names.index('Question')]
-                if question_cell.font and question_cell.font.strike:
-                    row_has_strike = True
-                    break  # No need to check other cells in this row
-            row_values.append(cell.value)
+            for cell in row_cells:
+                # Check if the cell has a font and if that font uses strikethrough
+                if sheet_name == 'OptionSets':
+                    if cell.font and cell.font.strike:
+                        row_has_strike = True
+                        break  # No need to check other cells in this row
+                else:
+                    question_cell = row_cells[column_names.index('Question')]
+                    if question_cell.font and question_cell.font.strike:
+                        row_has_strike = True
+                        break  # No need to check other cells in this row
+                row_values.append(cell.value)
 
-        if not row_has_strike:
-            data.append(row_values)
+            if not row_has_strike:
+                data.append(row_values)
 
-    # Create a DataFrame from the filtered data
-    df = pd.DataFrame(data, columns=column_names)
-    return df
+        # Create a DataFrame from the filtered data
+        df = pd.DataFrame(data, columns=column_names)
+        return df
+    except zipfile.BadZipFile:
+        raise zipfile.BadZipFile("The Excel file appears to be corrupted. Please try re-saving it in .xlsx format.")
+    except KeyError:
+        raise KeyError(f"Sheet '{sheet_name}' not found in the Excel file.")
+    except Exception as e:
+        # Try using pandas directly as a fallback
+        try:
+            print(f"Attempting to read {sheet_name} with pandas directly using file: {filepath}")
+            # Try with openpyxl engine first
+            df = pd.read_excel(filepath, sheet_name=sheet_name, header=header_row-1, engine='openpyxl')
+            print(f"Successfully read {sheet_name} with pandas using openpyxl engine.")
+            return df
+        except Exception as pandas_error_openpyxl:
+            try:
+                # Try with default engine as fallback (don't specify engine)
+                print(f"Attempting with default engine...")
+                df = pd.read_excel(filepath, sheet_name=sheet_name, header=header_row-1)
+                print(f"Successfully read {sheet_name} with pandas using default engine.")
+                return df
+            except Exception as pandas_error_default:
+                raise Exception(f"Error reading Excel file: {str(e)}. "
+                               f"Pandas fallback with openpyxl failed: {str(pandas_error_openpyxl)}. "
+                               f"Default engine fallback also failed: {str(pandas_error_default)}")
 
-# Adjust header to start from row 2
-#option_sets = pd.read_excel(METADATA_FILE, sheet_name='OptionSets', header=1)
-option_sets = read_excel_skip_strikeout(filepath=METADATA_FILE, sheet_name='OptionSets', header_row=2)
-# List of sheets to process
-SHEETS = os.getenv('SHEETS_TO_PREVIEW', 'F06-PHQ-9').split(',')
-print(SHEETS)
-
-# Define a global list to store all questions and answers
-ALL_QUESTIONS_ANSWERS = []
+def initialize_option_sets(metadata_file=None):
+    """
+    Initialize option_sets from the metadata file
+    
+    Args:
+        metadata_file (str, optional): Path to the metadata file. If None, uses the global METADATA_FILE.
+    """
+    global option_sets
+    
+    # Use the provided metadata_file if available, otherwise use the global METADATA_FILE
+    file_to_use = metadata_file if metadata_file else METADATA_FILE
+    
+    if not file_to_use or not os.path.exists(file_to_use):
+        raise FileNotFoundError(f"Metadata file not found: '{file_to_use}'")
+        
+    try:
+        option_sets = read_excel_skip_strikeout(filepath=file_to_use, sheet_name='OptionSets', header_row=2)
+    except Exception as e:
+        # Try a direct pandas approach as fallback
+        try:
+            print(f"Attempting to read OptionSets with pandas directly using file: {file_to_use}")
+            # Try with openpyxl engine first
+            option_sets = pd.read_excel(file_to_use, sheet_name='OptionSets', header=1, engine='openpyxl')
+            print("Successfully read OptionSets with pandas using openpyxl engine.")
+        except Exception as pandas_error_openpyxl:
+            try:
+                # Try with default engine as fallback
+                print(f"Attempting with default engine...")
+                option_sets = pd.read_excel(file_to_use, sheet_name='OptionSets', header=1)
+                print("Successfully read OptionSets with pandas using default engine.")
+            except Exception as pandas_error_default:
+                raise Exception(f"Failed to read OptionSets sheet: {str(e)}. "
+                               f"Pandas fallback with openpyxl failed: {str(pandas_error_openpyxl)}. "
+                               f"Default engine fallback also failed: {str(pandas_error_default)}")
 
 # Function to fetch options for a given option set
 def get_options(option_set_name):
@@ -103,6 +170,8 @@ def get_options(option_set_name):
     Returns:
         list: A list of dictionaries containing option set details.
     """
+    if option_sets is None:
+        raise ValueError("Option sets not initialized. Call initialize_option_sets first.")
     return option_sets[option_sets['OptionSet name'] == option_set_name].to_dict(orient='records')
 
 def find_question_concept_by_label(questions_answers, question_label):
@@ -520,16 +589,22 @@ def generate_question(row, columns, question_translations):
 
     return question
 
-def generate_form(sheet_name, form_translations):
+def generate_form(sheet_name, form_translations, metadata_file=None):
     """
     Generate a form JSON from a sheet of the OptionSets sheet.
 
     Args:
         sheet_name (str): The name of the sheet in the OptionSets sheet.
+        form_translations (dict): Dictionary to store translations.
+        metadata_file (str, optional): Path to the metadata file. If None, uses the global METADATA_FILE.
 
     Returns:
         dict: A form JSON.
     """
+    # Reset the global ALL_QUESTIONS_ANSWERS list
+    global ALL_QUESTIONS_ANSWERS
+    ALL_QUESTIONS_ANSWERS = []
+    
     form_data = {
         "name": sheet_name,
         "description": "MSF Form - "+sheet_name,
@@ -543,9 +618,32 @@ def generate_form(sheet_name, form_translations):
         "pages": []
     }
 
-    # Adjust header to start from row 2 and keep Excel font formatting including strike out characters
-    #df = pd.read_excel(METADATA_FILE, sheet_name=sheet_name, header=1)
-    df = read_excel_skip_strikeout(filepath=METADATA_FILE, sheet_name=sheet_name, header_row=2)
+    # Use the provided metadata_file if available, otherwise use the global METADATA_FILE
+    file_to_use = metadata_file if metadata_file else METADATA_FILE
+    
+    if not file_to_use or not os.path.exists(file_to_use):
+        raise FileNotFoundError(f"Metadata file not found: '{file_to_use}'")
+
+    try:
+        # Adjust header to start from row 2 and keep Excel font formatting including strike out characters
+        df = read_excel_skip_strikeout(filepath=file_to_use, sheet_name=sheet_name, header_row=2)
+    except Exception as e:
+        # Try a direct pandas approach as fallback
+        try:
+            print(f"Attempting to read {sheet_name} with pandas directly using file: {file_to_use}")
+            # Try with openpyxl engine first
+            df = pd.read_excel(file_to_use, sheet_name=sheet_name, header=1, engine='openpyxl')
+            print(f"Successfully read {sheet_name} with pandas using openpyxl engine.")
+        except Exception as pandas_error_openpyxl:
+            try:
+                # Try with default engine as fallback
+                print(f"Attempting with default engine...")
+                df = pd.read_excel(file_to_use, sheet_name=sheet_name, header=1)
+                print(f"Successfully read {sheet_name} with pandas using default engine.")
+            except Exception as pandas_error_default:
+                raise Exception(f"Failed to read sheet {sheet_name}: {str(e)}. "
+                               f"Pandas fallback with openpyxl failed: {str(pandas_error_openpyxl)}. "
+                               f"Default engine fallback also failed: {str(pandas_error_default)}")
 
     columns = df.columns.tolist()
 
@@ -640,43 +738,44 @@ TOTAL_ANSWERS = 0
 # Start the timer
 start_time = time.time()
 
-for sheet in SHEETS:
-    translations_data = {}
-    form, concept_ids, total_questions, total_answers = generate_form(sheet, translations_data)
-    translations = generate_translation_file(sheet, 'ar', translations_data)
-    json_data = json.dumps(form, indent=2)
-    translations_json_data = json.dumps(translations, ensure_ascii=False, indent=2)
-    try:
-        json.loads(json_data)  # Validate JSON format
-        form_name_output = sheet.replace(" ", "_")
-        with open(os.path.join(OUTPUT_DIR, f"{form_name_output}.json"), 'w', encoding='utf-8') as f:
-            f.write(json_data)
-        print(f"Configuration file for form {sheet} generated successfully!")
-        json.loads(translations_json_data)  # Validate JSON format
-        translation_file_name_output = sheet.replace(" ", "_")
-        with open(os.path.join(OUTPUT_DIR, f"{translation_file_name_output}_translations_ar.json"), 'w', encoding='utf-8') as f:
-            f.write(translations_json_data)
-        print(f"Translation file for form {sheet} generated successfully!")
-        print()
-    except json.JSONDecodeError as e:
-        print(f"JSON format error in form generated from sheet {sheet}: {e}")
-        print(f"JSON format error in translations form generated from sheet {sheet}: {e}")
-    all_concept_ids.update(concept_ids)
-    all_forms.append(form)
-    TOTAL_QUESTIONS += total_questions
-    TOTAL_ANSWERS += total_answers
+# The following code should be removed or commented out:
+# for sheet in SHEETS:
+#     translations_data = {}
+#     form, concept_ids, total_questions, total_answers = generate_form(sheet, translations_data)
+#     translations = generate_translation_file(sheet, 'ar', translations_data)
+#     json_data = json.dumps(form, indent=2)
+#     translations_json_data = json.dumps(translations, ensure_ascii=False, indent=2)
+#     try:
+#         json.loads(json_data)  # Validate JSON format
+#         form_name_output = sheet.replace(" ", "_")
+#         with open(os.path.join(OUTPUT_DIR, f"{form_name_output}.json"), 'w', encoding='utf-8') as f:
+#             f.write(json_data)
+#         print(f"Configuration file for form {sheet} generated successfully!")
+#         json.loads(translations_json_data)  # Validate JSON format
+#         translation_file_name_output = sheet.replace(" ", "_")
+#         with open(os.path.join(OUTPUT_DIR, f"{translation_file_name_output}_translations_ar.json"), 'w', encoding='utf-8') as f:
+#             f.write(translations_json_data)
+#         print(f"Translation file for form {sheet} generated successfully!")
+#         print()
+#     except json.JSONDecodeError as e:
+#         print(f"JSON format error in form generated from sheet {sheet}: {e}")
+#         print(f"JSON format error in translations form generated from sheet {sheet}: {e}")
+#     all_concept_ids.update(concept_ids)
+#     all_forms.append(form)
+#     TOTAL_QUESTIONS += total_questions
+#     TOTAL_ANSWERS += total_answers
 
-# Count the number of forms generated
-FORMS_GENERATED = len(SHEETS)
+# # Count the number of forms generated
+# FORMS_GENERATED = len(SHEETS)
 
-# End the timer
-end_time = time.time()
+# # End the timer
+# end_time = time.time()
 
-# Calculate the total time taken
-total_time = end_time - start_time
+# # Calculate the total time taken
+# total_time = end_time - start_time
 
-# Print the completion message with the number of forms generated
-print("Forms generation completed!")
-print(f"{FORMS_GENERATED} forms generated in {total_time:.2f} seconds")
-print(f"Total number of questions across all forms: {TOTAL_QUESTIONS}")
-print(f"Total number of answers across all forms: {TOTAL_ANSWERS}")
+# # Print the completion message with the number of forms generated
+# print("Forms generation completed!")
+# print(f"{FORMS_GENERATED} forms generated in {total_time:.2f} seconds")
+# print(f"Total number of questions across all forms: {TOTAL_QUESTIONS}")
+# print(f"Total number of answers across all forms: {TOTAL_ANSWERS}")

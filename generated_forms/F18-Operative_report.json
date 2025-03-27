@@ -1,0 +1,239 @@
+{
+  "name": "F18-Operative report",
+  "description": "MSF Form - F18-Operative report",
+  "version": "1",
+  "published": true,
+  "uuid": "",
+  "processor": "EncounterFormProcessor",
+  "encounter": "Consultation",
+  "retired": false,
+  "referencedForms": [],
+  "pages": [
+    {
+      "label": "Medical team",
+      "sections": [
+        {
+          "label": "Medical team",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "surgeon",
+              "label": "Surgeon",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "surgeon"
+              }
+            },
+            {
+              "id": "assistant",
+              "label": "Assistant",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "assistant"
+              }
+            },
+            {
+              "id": "anesthetist",
+              "label": "Anesthetist",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "anesthetist"
+              }
+            },
+            {
+              "id": "others",
+              "label": "Others",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "others"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Diagnosis",
+      "sections": [
+        {
+          "label": "Diagnosis",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "preoperative",
+              "label": "Preoperative",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "preoperative"
+              }
+            },
+            {
+              "id": "postoperative",
+              "label": "Postoperative",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "postoperative"
+              }
+            }
+          ]
+        },
+        {
+          "label": "Risk of infection",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "altemeierClassification",
+              "label": "Altemeier classification",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "altemeierClassification"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Date/time",
+      "sections": [
+        {
+          "label": "Date/time",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "startOfOperation",
+              "label": "Start  of operation",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "datetime",
+                "concept": "startOfOperation"
+              }
+            },
+            {
+              "id": "endOfOperation",
+              "label": "End of Operation",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "datetime",
+                "concept": "endOfOperation"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Anaesthesia",
+      "sections": [
+        {
+          "label": "Anaesthesia",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "type",
+              "label": "Type",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "type"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Procedure",
+      "sections": [
+        {
+          "label": "Procedure",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "name",
+              "label": "Name",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "name"
+              }
+            },
+            {
+              "id": "indications",
+              "label": "Indications",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "textarea",
+                "concept": "indications"
+              }
+            },
+            {
+              "id": "findingsAndTechnique",
+              "label": "Findings and technique",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "textarea",
+                "concept": "findingsAndTechnique"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Post-op",
+      "sections": [
+        {
+          "label": "Post-op",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "patientCondition",
+              "label": "Patient condition",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "textarea",
+                "concept": "patientCondition"
+              }
+            },
+            {
+              "id": "plan",
+              "label": "Plan",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "textarea",
+                "concept": "plan"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "None",
+      "sections": []
+    }
+  ]
+}
