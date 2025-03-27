@@ -175,17 +175,42 @@ def get_options(option_set_name):
     return option_sets[option_sets['OptionSet name'] == option_set_name].to_dict(orient='records')
 
 def find_question_concept_by_label(questions_answers, question_label):
-    " Find question concept by label. "
+    """
+    Find question concept by label.
+    
+    Args:
+        questions_answers (list): List of question answer dictionaries
+        question_label (str): The label to search for
+        
+    Returns:
+        str: The question ID if found, otherwise a generated ID
+    """
+    if not questions_answers:
+        return manage_id(question_label)
+        
     for question in questions_answers:
         if question.get('question_id') == manage_id(question_label):
             return question.get('question_id')
     return manage_id(question_label)
 
 def find_answer_concept_by_label(questions_answers, question_id, answer_label):
-    " Find answer concept by label. "
+    """
+    Find answer concept by label.
+    
+    Args:
+        questions_answers (list): List of question answer dictionaries
+        question_id (str): The question ID to search for
+        answer_label (str): The answer label to search for
+        
+    Returns:
+        str: The answer concept if found, otherwise a generated ID
+    """
+    if not questions_answers:
+        return manage_id(answer_label)
+        
     for question in questions_answers:
         if question.get('question_id') == manage_id(question_id):
-            for answer in question.get('questionOptions').get('answers', []):
+            for answer in question.get('questionOptions', {}).get('answers', []):
                 if answer.get('label') == answer_label:
                     return answer.get('concept')
     return manage_id(answer_label)

@@ -7,6 +7,7 @@ import uuid
 import base64
 import zipfile
 import sys
+import re
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -173,17 +174,30 @@ def main():
         # Update environment variable for metadata file path
         os.environ['METADATA_FILEPATH'] = temp_file_path
         
-        # Extract sheet names
+        # Extract sheet names and filter for sheets starting with "F" followed by 2 digits
         wb = openpyxl.load_workbook(temp_file_path, read_only=True)
-        sheet_names = wb.sheetnames
+        all_sheet_names = wb.sheetnames
         
-        # Sheet selection
+        # Filter sheets that start with "F" followed by 2 digits
+        form_sheet_names = [sheet for sheet in all_sheet_names if re.match(r'^F\d{2}', sheet)]
+        
+        # Sheet selection with checkboxes
         st.subheader("Select Sheets to Generate Forms")
-        selected_sheets = st.multiselect(
-            "Choose sheets", 
-            sheet_names,
-            help="Select one or more sheets to generate forms"
-        )
+        
+        # Create columns for checkboxes to make better use of space
+        num_cols = 3  # Number of columns for checkboxes
+        cols = st.columns(num_cols)
+        
+        selected_sheets = []
+        for i, sheet in enumerate(form_sheet_names):
+            col_idx = i % num_cols
+            with cols[col_idx]:
+                if st.checkbox(sheet, key=f"sheet_{sheet}"):
+                    selected_sheets.append(sheet)
+        
+        # Show selected count
+        if selected_sheets:
+            st.info(f"Selected {len(selected_sheets)} sheets: {', '.join(selected_sheets)}")
 
         # Generate forms button
         if st.button("Generate Forms", type="primary"):
@@ -197,58 +211,54 @@ def main():
                 st.subheader("Generated Forms")
                 
                 for form in generated_forms:
-                    with st.expander(f"Form: {form['sheet']}"):
-                        col1, col2 = st.columns(2)
+                    st.markdown(f"### Form: {form['sheet']}")
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.metric("Total Questions", form['total_questions'])
                         
-                        with col1:
-                            st.metric("Total Questions", form['total_questions'])
-                            
-                            # Load form JSON
-                            with open(form['form_path'], 'r') as f:
-                                form_json = f.read()
-                            
-                            # Download and copy buttons side by side
-                            btn_col1, btn_col2 = st.columns(2)
-                            with btn_col1:
-                                st.download_button(
-                                    label="Download Form JSON",
-                                    data=form_json,
-                                    file_name=os.path.basename(form['form_path']),
-                                    mime='application/json'
-                                )
-                            with btn_col2:
-                                # Copy button using st.code with copy button
-                                st.text("Copy Form JSON")
-                                st.code(form_json, language="json")
-                            
-                            # Show collapsed JSON
-                            with st.expander("View Form JSON"):
+                        # Load form JSON
+                        with open(form['form_path'], 'r') as f:
+                            form_json = f.read()
+                        
+                        # Download and copy buttons side by side
+                        btn_col1, btn_col2 = st.columns(2)
+                        with btn_col1:
+                            st.download_button(
+                                label="Download Form JSON",
+                                data=form_json,
+                                file_name=os.path.basename(form['form_path']),
+                                mime='application/json'
+                            )
+                        
+                        # Show JSON in a collapsible container - collapsed by default
+                        with st.container():
+                            if st.checkbox("View Form JSON", key=f"view_form_{form['sheet']}", value=False):
                                 st.json(json.loads(form_json))
+                    
+                    with col2:
+                        st.metric("Total Answers", form['total_answers'])
                         
-                        with col2:
-                            st.metric("Total Answers", form['total_answers'])
-                            
-                            # Load translation JSON
-                            with open(form['translation_path'], 'r') as f:
-                                translation_json = f.read()
-                            
-                            # Download and copy buttons side by side
-                            btn_col1, btn_col2 = st.columns(2)
-                            with btn_col1:
-                                st.download_button(
-                                    label="Download Translation JSON",
-                                    data=translation_json,
-                                    file_name=os.path.basename(form['translation_path']),
-                                    mime='application/json'
-                                )
-                            with btn_col2:
-                                # Copy button using st.code with copy button
-                                st.text("Copy Translation JSON")
-                                st.code(translation_json, language="json")
-                            
-                            # Show collapsed JSON
-                            with st.expander("View Translation JSON"):
+                        # Load translation JSON
+                        with open(form['translation_path'], 'r') as f:
+                            translation_json = f.read()
+                        
+                        # Download and copy buttons side by side
+                        btn_col1, btn_col2 = st.columns(2)
+                        with btn_col1:
+                            st.download_button(
+                                label="Download Translation JSON",
+                                data=translation_json,
+                                file_name=os.path.basename(form['translation_path']),
+                                mime='application/json'
+                            )
+                        
+                        # Show JSON in a collapsible container - collapsed by default
+                        with st.container():
+                            if st.checkbox("View Translation JSON", key=f"view_trans_{form['sheet']}", value=False):
                                 st.json(json.loads(translation_json))
+                    
+                    st.markdown("---")  # Add a separator between forms
 
 if __name__ == "__main__":
     main()
