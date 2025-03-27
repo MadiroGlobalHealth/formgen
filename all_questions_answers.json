@@ -1,1 +1,270 @@
-[]
+[
+  {
+    "question_id": "littleInterestOrPleasureInDoingThings",
+    "question_label": "Little interest or pleasure in doing things?",
+    "questionOptions": {
+      "answers": [
+        {
+          "label": "Not at all (0 point)",
+          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+        },
+        {
+          "label": "Several days (1 point)",
+          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
+        },
+        {
+          "label": "More than half the days (2 points)",
+          "concept": "234259ec-5368-4488-8482-4f261cc76714"
+        },
+        {
+          "label": "Nearly every day (3 points)",
+          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
+        }
+      ]
+    }
+  },
+  {
+    "question_id": "feelingDownDepressedOrHopeless",
+    "question_label": "Feeling down, depressed, or hopeless?",
+    "questionOptions": {
+      "answers": [
+        {
+          "label": "Not at all (0 point)",
+          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+        },
+        {
+          "label": "Several days (1 point)",
+          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
+        },
+        {
+          "label": "More than half the days (2 points)",
+          "concept": "234259ec-5368-4488-8482-4f261cc76714"
+        },
+        {
+          "label": "Nearly every day (3 points)",
+          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
+        }
+      ]
+    }
+  },
+  {
+    "question_id": "troubleFallingOrStayingAsleepOrSleepingTooMuch",
+    "question_label": "Trouble falling or staying asleep, or sleeping too much?",
+    "questionOptions": {
+      "answers": [
+        {
+          "label": "Not at all (0 point)",
+          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+        },
+        {
+          "label": "Several days (1 point)",
+          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
+        },
+        {
+          "label": "More than half the days (2 points)",
+          "concept": "234259ec-5368-4488-8482-4f261cc76714"
+        },
+        {
+          "label": "Nearly every day (3 points)",
+          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
+        }
+      ]
+    }
+  },
+  {
+    "question_id": "feelingTiredOrHavingLittleEnergy",
+    "question_label": "Feeling tired or having little energy?",
+    "questionOptions": {
+      "answers": [
+        {
+          "label": "Not at all (0 point)",
+          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+        },
+        {
+          "label": "Several days (1 point)",
+          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
+        },
+        {
+          "label": "More than half the days (2 points)",
+          "concept": "234259ec-5368-4488-8482-4f261cc76714"
+        },
+        {
+          "label": "Nearly every day (3 points)",
+          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
+        }
+      ]
+    }
+  },
+  {
+    "question_id": "poorAppetiteOrOvereating",
+    "question_label": "Poor appetite or overeating?",
+    "questionOptions": {
+      "answers": [
+        {
+          "label": "Not at all (0 point)",
+          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+        },
+        {
+          "label": "Several days (1 point)",
+          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
+        },
+        {
+          "label": "More than half the days (2 points)",
+          "concept": "234259ec-5368-4488-8482-4f261cc76714"
+        },
+        {
+          "label": "Nearly every day (3 points)",
+          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
+        }
+      ]
+    }
+  },
+  {
+    "question_id": "feelingBadAboutYourselfOrThatYouAreAFailureOrHaveLetYourselfOrYourFamilyDown",
+    "question_label": "Feeling bad about yourself - or that you are a failure or have let yourself or your family down?",
+    "questionOptions": {
+      "answers": [
+        {
+          "label": "Not at all (0 point)",
+          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+        },
+        {
+          "label": "Several days (1 point)",
+          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
+        },
+        {
+          "label": "More than half the days (2 points)",
+          "concept": "234259ec-5368-4488-8482-4f261cc76714"
+        },
+        {
+          "label": "Nearly every day (3 points)",
+          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
+        }
+      ]
+    }
+  },
+  {
+    "question_id": "troubleConcentratingOnThingsSuchAsReadingTheNewspaperOrWatchingTelevision",
+    "question_label": "Trouble concentrating on things, such as reading the newspaper or watching television?",
+    "questionOptions": {
+      "answers": [
+        {
+          "label": "Not at all (0 point)",
+          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+        },
+        {
+          "label": "Several days (1 point)",
+          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
+        },
+        {
+          "label": "More than half the days (2 points)",
+          "concept": "234259ec-5368-4488-8482-4f261cc76714"
+        },
+        {
+          "label": "Nearly every day (3 points)",
+          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
+        }
+      ]
+    }
+  },
+  {
+    "question_id": "movingOrSpeakingSoSlowlyThatOtherPeopleCouldHaveNoticedOrTheOppositeBeingSoFidgetyOrRestlessThatYouHaveBeenMovingAroundALotMoreThanUsual",
+    "question_label": "Moving or speaking so slowly that other people could have noticed? Or the opposite - being so fidgety or restless that you have been moving around a lot more than usual?",
+    "questionOptions": {
+      "answers": [
+        {
+          "label": "Not at all (0 point)",
+          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+        },
+        {
+          "label": "Several days (1 point)",
+          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
+        },
+        {
+          "label": "More than half the days (2 points)",
+          "concept": "234259ec-5368-4488-8482-4f261cc76714"
+        },
+        {
+          "label": "Nearly every day (3 points)",
+          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
+        }
+      ]
+    }
+  },
+  {
+    "question_id": "thoughtsThatYouWouldBeBetterOffDeadOrOfHurtingYourselfInSomeWay",
+    "question_label": "Thoughts that you would be better off dead, or of hurting yourself in some way?",
+    "questionOptions": {
+      "answers": [
+        {
+          "label": "Not at all (0 point)",
+          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+        },
+        {
+          "label": "Several days (1 point)",
+          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
+        },
+        {
+          "label": "More than half the days (2 points)",
+          "concept": "234259ec-5368-4488-8482-4f261cc76714"
+        },
+        {
+          "label": "Nearly every day (3 points)",
+          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
+        }
+      ]
+    }
+  },
+  {
+    "question_id": "ifYouCheckedOffAnyProblemsHowDifficultHaveTheseProblemsMadeItForYouToDoYourWorkTakeCareOfThingsAtHomeOrGetAlongWithOtherPeople",
+    "question_label": "If you checked off any problems, how difficult have these problems made it for you to do your work, take care of things at home, or get along with other people?",
+    "questionOptions": {
+      "answers": [
+        {
+          "label": "Not difficult at all",
+          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+        },
+        {
+          "label": "Somewhat difficult",
+          "concept": "243698be-42a0-46da-8be8-21c774f2f42a"
+        },
+        {
+          "label": "Very difficult",
+          "concept": "45125711-2156-475e-ac7e-6eed34b976a7"
+        },
+        {
+          "label": "Extremely difficult",
+          "concept": "7914639c-89bc-4ff9-bff5-06b5c22aed11"
+        }
+      ]
+    }
+  },
+  {
+    "question_id": "depressionSeverityScale",
+    "question_label": "Depression severity scale",
+    "questionOptions": {
+      "answers": [
+        {
+          "label": "PHQ9 score <5: No depression",
+          "concept": "5aa4edf5-b218-4470-b5da-ad1d88007954"
+        },
+        {
+          "label": "PHQ9 score 5-9: Minimal symptoms",
+          "concept": "9d7d154f-e7a1-4490-b93a-85f5c2157f92"
+        },
+        {
+          "label": "PHQ9 score 10-14: Minor to mild depression (or dysthymia)",
+          "concept": "ed7484ef-a3ea-4c95-bf59-58987c7f6d7c"
+        },
+        {
+          "label": "PHQ9 score 15-19: Major depression",
+          "concept": "d163711c-9fcf-4050-b015-d3463b4602fa"
+        },
+        {
+          "label": "PHQ9 score >19: Severe depression",
+          "concept": "0ff3a7dc-1a6e-4453-91d5-29cf6a9f790c"
+        }
+      ]
+    }
+  }
+]

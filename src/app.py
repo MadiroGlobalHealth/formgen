@@ -53,14 +53,8 @@ def generate_forms_from_sheets(metadata_file, selected_sheets):
         # Set the environment variable for the metadata file path
         os.environ['METADATA_FILEPATH'] = metadata_file
         
-        # Initialize option sets with the uploaded file
-        try:
-            initialize_option_sets(metadata_file)
-        except Exception as e:
-            st.error(f"Error initializing option sets: {str(e)}")
-            st.info("Please ensure your Excel file has a sheet named 'OptionSets' with the expected format.")
-            st.info("If you're still having issues, try opening the file in Excel and saving it as a new .xlsx file.")
-            return []
+        # We don't need to initialize option sets here again since it's already done when the file is uploaded
+        # and tracked in session state
         
         generated_forms = []
         
@@ -142,6 +136,7 @@ def main():
         st.session_state.temp_file_path = None
         st.session_state.selected_sheets = []
         st.session_state.forms_generated = False
+        st.session_state.option_sets_initialized = False
         
     st.set_page_config(
         page_title="OpenMRS Form Generator",
@@ -192,18 +187,20 @@ def main():
                 st.info("Please ensure your file is in a supported Excel format (.xlsx, .xlsm, .xltx, .xltm) and not corrupted.")
                 st.stop()
         
-        # Initialize option sets from the uploaded file
-        with st.spinner('Initializing option sets... Please wait.'):
-            try:
-                initialize_option_sets(temp_file_path)
-            except zipfile.BadZipFile:
-                st.error("The uploaded file appears to be corrupted or not a valid Excel file.")
-                st.info("Please try re-saving your Excel file or creating a new one. Make sure to save it in .xlsx format.")
-                st.stop()
-            except Exception as e:
-                st.error(f"Error initializing option sets: {str(e)}")
-                st.info("Please ensure your Excel file has a sheet named 'OptionSets' with the expected format.")
-                st.stop()
+        # Initialize option sets from the uploaded file only if not already initialized
+        if not st.session_state.option_sets_initialized:
+            with st.spinner('Initializing option sets... Please wait.'):
+                try:
+                    initialize_option_sets(temp_file_path)
+                    st.session_state.option_sets_initialized = True
+                except zipfile.BadZipFile:
+                    st.error("The uploaded file appears to be corrupted or not a valid Excel file.")
+                    st.info("Please try re-saving your Excel file or creating a new one. Make sure to save it in .xlsx format.")
+                    st.stop()
+                except Exception as e:
+                    st.error(f"Error initializing option sets: {str(e)}")
+                    st.info("Please ensure your Excel file has a sheet named 'OptionSets' with the expected format.")
+                    st.stop()
         
         # Update environment variable for metadata file path
         os.environ['METADATA_FILEPATH'] = temp_file_path
