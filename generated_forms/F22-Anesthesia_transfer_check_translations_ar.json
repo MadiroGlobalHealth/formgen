@@ -1,0 +1,30 @@
+{
+  "uuid": "",
+  "form": "F22-Anesthesia transfer check",
+  "description": "Ar Translations for 'F22-Anesthesia transfer check'",
+  "language": "ar",
+  "translations": {
+    "At": null,
+    "By": null,
+    "Comments": "تعليقات",
+    "Concentration (L/min)": null,
+    "Consider changing current medication and adding new drugs using the order basket": null,
+    "Dialogue (oriented person/place)?": null,
+    "Extremity movement (moves all four limbs)?": null,
+    "Feeding": null,
+    "Instructions": null,
+    "Medication": null,
+    "Mobilization": null,
+    "NPO?": null,
+    "Other instructions": null,
+    "Oxygen": null,
+    "Oxygen saturation >90% (room air)?": null,
+    "PONV control?": null,
+    "Pain control (VAS<4)?": null,
+    "Parameters": null,
+    "Product": null,
+    "Stable vital signs (SBP>90 and <180, HR>50 and >110) or +/- pre-operative level (check in \"Vitals\" and fill with updated measurements)?": null,
+    "Transfer to ward": null,
+    "Transfer to ward at": null
+  }
+}

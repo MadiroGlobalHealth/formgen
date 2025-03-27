@@ -81,19 +81,25 @@ def generate_forms_from_sheets(metadata_file, selected_sheets):
                 form_path = os.path.join(output_dir, form_filename)
                 translation_path = os.path.join(output_dir, translation_filename)
                 
+                # Convert to JSON strings
+                form_json = json.dumps(form, indent=2)
+                translation_json = json.dumps(translations, indent=2, ensure_ascii=False)
+                
                 # Save files
                 with open(form_path, 'w', encoding='utf-8') as f:
-                    json.dump(form, f, indent=2)
+                    f.write(form_json)
                 
                 with open(translation_path, 'w', encoding='utf-8') as f:
-                    json.dump(translations, f, indent=2, ensure_ascii=False)
+                    f.write(translation_json)
                 
                 generated_forms.append({
                     'sheet': sheet,
                     'form_path': form_path,
                     'translation_path': translation_path,
                     'total_questions': total_questions,
-                    'total_answers': total_answers
+                    'total_answers': total_answers,
+                    'form_json': form_json,
+                    'translation_json': translation_json
                 })
                 
                 st.success(f"Successfully generated form for {sheet}")
@@ -137,8 +143,6 @@ def main():
     )
 
     if uploaded_file is not None:
-        # Display file info
-        st.info(f"File uploaded: {uploaded_file.name} ({uploaded_file.type})")
         
         # Save the uploaded file
         with st.spinner('Processing file...'):
@@ -230,9 +234,8 @@ def main():
                     with col1:
                         st.metric("Total Questions", form['total_questions'])
                         
-                        # Load form JSON
-                        with open(form['form_path'], 'r') as f:
-                            form_json = f.read()
+                        # Use the JSON stored in session state
+                        form_json = form['form_json']
                         
                         # Two buttons for form JSON: Download and Copy
                         btn_col1, btn_col2 = st.columns(2)
@@ -254,9 +257,8 @@ def main():
                     with col2:
                         st.metric("Total Answers", form['total_answers'])
                         
-                        # Load translation JSON
-                        with open(form['translation_path'], 'r') as f:
-                            translation_json = f.read()
+                        # Use the JSON stored in session state
+                        translation_json = form['translation_json']
                         
                         # Two buttons for translation JSON: Download and Copy
                         btn_col1, btn_col2 = st.columns(2)

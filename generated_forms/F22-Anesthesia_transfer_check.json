@@ -1,0 +1,277 @@
+{
+  "name": "F22-Anesthesia transfer check",
+  "description": "MSF Form - F22-Anesthesia transfer check",
+  "version": "1",
+  "published": true,
+  "uuid": "",
+  "processor": "EncounterFormProcessor",
+  "encounter": "Consultation",
+  "retired": false,
+  "referencedForms": [],
+  "pages": [
+    {
+      "label": "Parameters",
+      "sections": [
+        {
+          "label": "Parameters",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "oxygenSaturationMoreThan90",
+              "label": "Oxygen saturation >90% (room air)?",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "oxygenSaturationMoreThan90"
+              }
+            },
+            {
+              "id": "painControl",
+              "label": "Pain control (VAS<4)?",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "painControl"
+              }
+            },
+            {
+              "id": "extremityMovement",
+              "label": "Extremity movement (moves all four limbs)?",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "extremityMovement"
+              }
+            },
+            {
+              "id": "ponvControl",
+              "label": "PONV control?",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "ponvControl"
+              }
+            },
+            {
+              "id": "dialogue",
+              "label": "Dialogue (oriented person/place)?",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "dialogue"
+              }
+            },
+            {
+              "id": "stableVitalSignsOrPlusOrPreOperativeLevel",
+              "label": "Stable vital signs (SBP>90 and <180, HR>50 and >110) or +/- pre-operative level (check in \"Vitals\" and fill with updated measurements)?",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "stableVitalSignsOrPlusOrPreOperativeLevel"
+              }
+            },
+            {
+              "id": "comments",
+              "label": "Comments",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "textarea",
+                "concept": "comments"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Transfer",
+      "sections": [
+        {
+          "label": "Transfer to ward",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "transferToWardAt",
+              "label": "Transfer to ward at",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "datetime",
+                "concept": "transferToWardAt"
+              },
+              "default": "Current date"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Prescription",
+      "sections": [
+        {
+          "label": "Medication",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "considerChangingCurrentMedicationAndAddingNewDrugsUsingTheOrderBasket",
+              "label": "Consider changing current medication and adding new drugs using the order basket",
+              "required": false,
+              "questionOptions": {
+                "rendering": "workspace-launcher",
+                "buttonLabel": "Order medications",
+                "workspaceName": "order-basket"
+              }
+            }
+          ]
+        },
+        {
+          "label": "Oxygen",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "concentration",
+              "label": "Concentration (L/min)",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "concentration"
+              }
+            },
+            {
+              "id": "by",
+              "label": "By",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "by"
+              }
+            }
+          ]
+        },
+        {
+          "label": "Feeding",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "npo",
+              "label": "NPO?",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "npo"
+              }
+            },
+            {
+              "id": "product",
+              "label": "Product",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "product"
+              },
+              "hide": {
+                "hideWhenExpression": "npo !== 'yes'"
+              }
+            },
+            {
+              "id": "at",
+              "label": "At",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "datetime",
+                "concept": "at"
+              },
+              "default": "Current date",
+              "hide": {
+                "hideWhenExpression": "npo !== 'yes'"
+              }
+            },
+            {
+              "id": "by",
+              "label": "By",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "by"
+              },
+              "hide": {
+                "hideWhenExpression": "npo !== 'yes'"
+              }
+            }
+          ]
+        },
+        {
+          "label": "Mobilization",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "at",
+              "label": "At",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "datetime",
+                "concept": "at"
+              },
+              "default": "Current date"
+            }
+          ]
+        },
+        {
+          "label": "Other instructions",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "instructions",
+              "label": "Instructions",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "textarea",
+                "concept": "instructions"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Comments",
+      "sections": [
+        {
+          "label": "Comments",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "comments",
+              "label": "Comments",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "textarea",
+                "concept": "comments"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "None",
+      "sections": []
+    }
+  ]
+}
