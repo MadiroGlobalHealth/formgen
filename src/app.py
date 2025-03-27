@@ -108,6 +108,14 @@ def generate_forms_from_sheets(metadata_file, selected_sheets):
         return []
 
 def main():
+    # Initialize session state for JSON preview toggles and generated forms
+    if 'initialized' not in st.session_state:
+        st.session_state.initialized = True
+        st.session_state.generated_forms = []
+        st.session_state.temp_file_path = None
+        st.session_state.selected_sheets = []
+        st.session_state.forms_generated = False
+        
     st.set_page_config(
         page_title="OpenMRS Form Generator",
         page_icon="🏥",
@@ -200,17 +208,22 @@ def main():
             st.info(f"Selected {len(selected_sheets)} sheets: {', '.join(selected_sheets)}")
 
         # Generate forms button
-        if st.button("Generate Forms", type="primary"):
-            if not selected_sheets:
+        if st.button("Generate Forms", type="primary") or st.session_state.forms_generated:
+            if not selected_sheets and not st.session_state.forms_generated:
                 st.warning("Please select at least one sheet")
             else:
-                with st.spinner('Generating forms...'):
-                    generated_forms = generate_forms_from_sheets(temp_file_path, selected_sheets)
+                # Only generate forms if they haven't been generated yet
+                if not st.session_state.forms_generated:
+                    with st.spinner('Generating forms...'):
+                        st.session_state.temp_file_path = temp_file_path
+                        st.session_state.selected_sheets = selected_sheets
+                        st.session_state.generated_forms = generate_forms_from_sheets(temp_file_path, selected_sheets)
+                        st.session_state.forms_generated = True
                 
-                # Display results
+                # Display results using the stored generated forms
                 st.subheader("Generated Forms")
                 
-                for form in generated_forms:
+                for form in st.session_state.generated_forms:
                     st.markdown(f"### Form: {form['sheet']}")
                     col1, col2 = st.columns(2)
                     
@@ -221,20 +234,22 @@ def main():
                         with open(form['form_path'], 'r') as f:
                             form_json = f.read()
                         
-                        # Download and copy buttons side by side
+                        # Two buttons for form JSON: Download and Copy
                         btn_col1, btn_col2 = st.columns(2)
                         with btn_col1:
                             st.download_button(
-                                label="Download Form JSON",
+                                label="Download JSON",
                                 data=form_json,
                                 file_name=os.path.basename(form['form_path']),
                                 mime='application/json'
                             )
+                        with btn_col2:
+                            if st.button("Copy JSON", key=f"copy_form_{form['sheet']}"):
+                                st.session_state[f"show_copy_form_{form['sheet']}"] = not st.session_state.get(f"show_copy_form_{form['sheet']}", False)
                         
-                        # Show JSON in a collapsible container - collapsed by default
-                        with st.container():
-                            if st.checkbox("View Form JSON", key=f"view_form_{form['sheet']}", value=False):
-                                st.json(json.loads(form_json))
+                        # Always include the JSON in the page but keep it hidden by default
+                        with st.expander("Copy Form JSON", expanded=st.session_state.get(f"show_copy_form_{form['sheet']}", False)):
+                            st.code(form_json, language="json")
                     
                     with col2:
                         st.metric("Total Answers", form['total_answers'])
@@ -243,20 +258,22 @@ def main():
                         with open(form['translation_path'], 'r') as f:
                             translation_json = f.read()
                         
-                        # Download and copy buttons side by side
+                        # Two buttons for translation JSON: Download and Copy
                         btn_col1, btn_col2 = st.columns(2)
                         with btn_col1:
                             st.download_button(
-                                label="Download Translation JSON",
+                                label="Download JSON",
                                 data=translation_json,
                                 file_name=os.path.basename(form['translation_path']),
                                 mime='application/json'
                             )
+                        with btn_col2:
+                            if st.button("Copy JSON", key=f"copy_trans_{form['sheet']}"):
+                                st.session_state[f"show_copy_trans_{form['sheet']}"] = not st.session_state.get(f"show_copy_trans_{form['sheet']}", False)
                         
-                        # Show JSON in a collapsible container - collapsed by default
-                        with st.container():
-                            if st.checkbox("View Translation JSON", key=f"view_trans_{form['sheet']}", value=False):
-                                st.json(json.loads(translation_json))
+                        # Always include the JSON in the page but keep it hidden by default
+                        with st.expander("Copy Translation JSON", expanded=st.session_state.get(f"show_copy_trans_{form['sheet']}", False)):
+                            st.code(translation_json, language="json")
                     
                     st.markdown("---")  # Add a separator between forms
 

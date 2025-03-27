@@ -1,0 +1,266 @@
+{
+  "name": "F28-SAC discharge form",
+  "description": "MSF Form - F28-SAC discharge form",
+  "version": "1",
+  "published": true,
+  "uuid": "",
+  "processor": "EncounterFormProcessor",
+  "encounter": "Consultation",
+  "retired": false,
+  "referencedForms": [],
+  "pages": [
+    {
+      "label": "Admission",
+      "sections": [
+        {
+          "label": "Admission data",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "admissionDateAndTime",
+              "label": "Admission date and time",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "datetime",
+                "concept": "admissionDateAndTime"
+              }
+            },
+            {
+              "id": "reason",
+              "label": "Reason",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "reason"
+              }
+            },
+            {
+              "id": "at",
+              "label": "At (gestational weeks)",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "at"
+              }
+            }
+          ]
+        },
+        {
+          "label": "Medication given",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "checkInmedicationsAndimmunizations",
+              "label": "Check in \"Medications\" and \"Immunizations\"",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "multiCheckbox",
+                "concept": "checkInmedicationsAndimmunizations"
+              }
+            },
+            {
+              "id": "quantity",
+              "label": "Quantity (tabs)",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "quantity"
+              },
+              "disallowDecimals": false,
+              "hide": {
+                "hideWhenExpression": "checkInmedicationsAndimmunizations !== 'misoprostol'"
+              }
+            },
+            {
+              "id": "duration",
+              "label": "Duration (days)",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "duration"
+              },
+              "hide": {
+                "hideWhenExpression": "Invalid expression format"
+              }
+            }
+          ]
+        },
+        {
+          "label": "Procedures",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "mvaPerformed",
+              "label": "MVA performed?",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "mvaPerformed"
+              }
+            },
+            {
+              "id": "date",
+              "label": "Date",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "date",
+                "concept": "date"
+              },
+              "hide": {
+                "hideWhenExpression": "mvaPerformed !== 'yes'"
+              }
+            },
+            {
+              "id": "hb",
+              "label": "Hb (g/dl)",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "hb"
+              },
+              "disallowDecimals": false,
+              "hide": {
+                "hideWhenExpression": "mvaPerformed !== 'yes'"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Discharge",
+      "sections": [
+        {
+          "label": "Discharge data",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "dischargeDateAndTime",
+              "label": "Discharge date and time",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "datetime",
+                "concept": "dischargeDateAndTime"
+              },
+              "default": "Current date"
+            }
+          ]
+        },
+        {
+          "label": "Prescription",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "prescribeMedicationWithTheOrderBasketWheneverNecessary",
+              "label": "Prescribe medication with the order basket whenever necessary",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "prescribeMedicationWithTheOrderBasketWheneverNecessary"
+              }
+            },
+            {
+              "id": "whichOne",
+              "label": "Which one",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "textarea",
+                "concept": "whichOne"
+              },
+              "hide": {
+                "hideWhenExpression": "prescribeMedicationWithTheOrderBasketWheneverNecessary !== 'other'"
+              }
+            }
+          ]
+        },
+        {
+          "label": "Family planning",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "checkOrFillInfamilyPlanningCard",
+              "label": "Check or fill in \"Family planning card\"",
+              "required": false,
+              "questionOptions": {
+                "rendering": "workspace-launcher",
+                "buttonLabel": "Open Workspace",
+                "workspaceName": "family-planning-assessment-form"
+              }
+            },
+            {
+              "id": "received",
+              "label": "Received?",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "radio",
+                "concept": "received"
+              }
+            },
+            {
+              "id": "contraceptiveMethod",
+              "label": "Contraceptive method",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "contraceptiveMethod"
+              },
+              "hide": {
+                "hideWhenExpression": "received !== 'yes'"
+              }
+            }
+          ]
+        },
+        {
+          "label": "Diagnosis",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "dischargeDiagnosis",
+              "label": "Discharge diagnosis",
+              "type": "obs",
+              "required": false,
+              "questionOptions": {
+                "rendering": "multiCheckbox",
+                "concept": "dischargeDiagnosis"
+              }
+            }
+          ]
+        },
+        {
+          "label": "Follow up visit",
+          "isExpanded": false,
+          "questions": [
+            {
+              "id": "inappointmentsSetTheNextDateForFollowUpWheneverNecessary",
+              "label": "In \"Appointments\" set the next date for follow up whenever necessary",
+              "required": false,
+              "questionOptions": {
+                "rendering": "workspace-launcher",
+                "buttonLabel": "Set the next appointment date",
+                "workspaceName": "appointments-form-workspace"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "None",
+      "sections": []
+    }
+  ]
+}

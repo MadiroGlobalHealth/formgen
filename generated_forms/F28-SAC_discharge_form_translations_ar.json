@@ -1,0 +1,33 @@
+{
+  "uuid": "",
+  "form": "F28-SAC discharge form",
+  "description": "Ar Translations for 'F28-SAC discharge form'",
+  "language": "ar",
+  "translations": {
+    "Admission data": "بيانات القبول",
+    "Admission date and time": "تاريخ ووقت القبول",
+    "At (gestational weeks)": null,
+    "Check in \"Medications\" and \"Immunizations\"": null,
+    "Check or fill in \"Family planning card\"": null,
+    "Contraceptive method": null,
+    "Date": null,
+    "Diagnosis": null,
+    "Discharge data": null,
+    "Discharge date and time": null,
+    "Discharge diagnosis": null,
+    "Duration (days)": null,
+    "Family planning": null,
+    "Follow up visit": null,
+    "Hb (g/dl)": null,
+    "In \"Appointments\" set the next date for follow up whenever necessary": null,
+    "MVA performed?": null,
+    "Medication given": null,
+    "Prescribe medication with the order basket whenever necessary": null,
+    "Prescription": null,
+    "Procedures": null,
+    "Quantity (tabs)": null,
+    "Reason": null,
+    "Received?": null,
+    "Which one": null
+  }
+}
