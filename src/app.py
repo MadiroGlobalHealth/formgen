@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import openpyxl
@@ -66,9 +67,16 @@ def generate_forms_from_sheets(metadata_file, selected_sheets):
         for sheet in selected_sheets:
             translations_data = {}
             try:
+                # Start timing the generation
+                import time
+                start_time = time.time()
+                
                 # Generate form and translations, explicitly passing the metadata file path
                 form, _, total_questions, total_answers = generate_form(sheet, translations_data, metadata_file)
                 translations = generate_translation_file(sheet, 'ar', translations_data)
+                
+                # End timing
+                generation_time = time.time() - start_time
                 
                 # Create output directory if it doesn't exist
                 output_dir = 'generated_forms'
@@ -85,6 +93,14 @@ def generate_forms_from_sheets(metadata_file, selected_sheets):
                 form_json = json.dumps(form, indent=2)
                 translation_json = json.dumps(translations, indent=2, ensure_ascii=False)
                 
+                # Calculate file sizes
+                form_size = len(form_json.encode('utf-8'))
+                translation_size = len(translation_json.encode('utf-8'))
+                
+                # Count sections and pages
+                num_pages = len(form.get('pages', []))
+                num_sections = sum(len(page.get('sections', [])) for page in form.get('pages', []))
+                
                 # Save files
                 with open(form_path, 'w', encoding='utf-8') as f:
                     f.write(form_json)
@@ -99,7 +115,12 @@ def generate_forms_from_sheets(metadata_file, selected_sheets):
                     'total_questions': total_questions,
                     'total_answers': total_answers,
                     'form_json': form_json,
-                    'translation_json': translation_json
+                    'translation_json': translation_json,
+                    'generation_time': generation_time,
+                    'form_size': form_size,
+                    'translation_size': translation_size,
+                    'num_pages': num_pages,
+                    'num_sections': num_sections
                 })
                 
                 st.success(f"Successfully generated form for {sheet}")
@@ -233,35 +254,63 @@ def main():
                 
                 for form in st.session_state.generated_forms:
                     st.markdown(f"### Form: {form['sheet']}")
+                    
+                    # Create a 2x2 grid for metrics
+                    metric_cols = st.columns(4)
+                    with metric_cols[0]:
+                        st.metric("Questions", form['total_questions'])
+                    with metric_cols[1]:
+                        st.metric("Answers", form['total_answers'])
+                    with metric_cols[2]:
+                        st.metric("Pages", form.get('num_pages', 'N/A'))
+                    with metric_cols[3]:
+                        st.metric("Sections", form.get('num_sections', 'N/A'))
+                    
+                    # Add generation stats
+                    stat_cols = st.columns(3)
+                    with stat_cols[0]:
+                        st.metric("Generation Time", f"{form.get('generation_time', 0):.2f}s")
+                    with stat_cols[1]:
+                        form_size_kb = form.get('form_size', 0) / 1024
+                        st.metric("Form Size", f"{form_size_kb:.1f} KB")
+                    with stat_cols[2]:
+                        trans_size_kb = form.get('translation_size', 0) / 1024
+                        st.metric("Translation Size", f"{trans_size_kb:.1f} KB")
+                    
+                    # Create columns for form and translation
                     col1, col2 = st.columns(2)
                     
                     with col1:
-                        st.metric("Total Questions", form['total_questions'])
-                        
-                        # Use the JSON stored in session state
+                        # Form JSON
                         form_json = form['form_json']
                         
-                        # Only keep the download button
+                        # Download button
                         st.download_button(
                             label="Download Form JSON",
                             data=form_json,
                             file_name=os.path.basename(form['form_path']),
                             mime='application/json'
                         )
+                        
+                        # Add collapsible JSON preview
+                        with st.expander("Preview Form JSON (click to expand)"):
+                            st.code(form_json, language="json")
                     
                     with col2:
-                        st.metric("Total Answers", form['total_answers'])
-                        
-                        # Use the JSON stored in session state
+                        # Translation JSON
                         translation_json = form['translation_json']
                         
-                        # Only keep the download button
+                        # Download button
                         st.download_button(
                             label="Download Translation JSON",
                             data=translation_json,
                             file_name=os.path.basename(form['translation_path']),
                             mime='application/json'
                         )
+                        
+                        # Add collapsible JSON preview
+                        with st.expander("Preview Translation JSON (click to expand)"):
+                            st.code(translation_json, language="json")
                     
                     st.markdown("---")  # Add a separator between forms
 
