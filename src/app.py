@@ -363,8 +363,8 @@ def main():
     # Navigation menu
     st.sidebar.title("Navigation")
     page = st.sidebar.radio(
-        "Go to",
-        ["Home", "Configuration"],
+        "",
+        ["O3 Form Generator", "Configuration"],
         key="navigation"
     )
     
@@ -375,7 +375,7 @@ def main():
     st.sidebar.markdown("<p style='color: #888; font-size: 0.8em;'>Powered by</p>", unsafe_allow_html=True)
     st.sidebar.image(
         "https://uc8ab7bcc5f25d935b07d8f4b425.previews.dropboxusercontent.com/p/thumb/ACmC2HTzRrV2Qo19LyzxNpAtrMu6bOUU0frPZXioZ3eIPZ03sgTqZyWxyRLOVocHk6nnYK4dNbyuW-B8z7HXJ0NwRz8O_5Ouw9Hdp5lNZxm8lbjQgufCK16MA_A4sOPJhun1pmH1vd3Mj-0rbPYWuqHUr8hgU_1ng6I27UjxFoJmxaerYxgndMeJuKcgr5I5C9uBzSAzCLkPR9aPfBontkXLpTn1TFtnEHJNXuWuQHhhwRWDjiO7sGkgmvSOMyrcHPhVYprnn_0eh8DwHU9rLqs0bDsvC-eb2klDBSektZ3pcR_1ULB07gk9dquOdkQ_3RQ5VqiSWWzVUzjHTa7-az-HWSWT5d_0c9rxfZ4H97dtYfw5OZvT_M-0uIs79YkFdyY/p.png?is_prewarmed=true",
-        width=120
+        width=100
     )
     
     # Add version number (git commit hash) below the logo
@@ -385,7 +385,7 @@ def main():
     # Close the footer div
     st.sidebar.markdown("</div>", unsafe_allow_html=True)
     
-    if page == "Home":
+    if page == "O3 Form Generator":
         st.session_state.current_page = "home"
         show_home_page()
     elif page == "Configuration":
