@@ -338,6 +338,28 @@ def main():
             unsafe_allow_html=True
         )
 
+    # Create a sidebar container with custom CSS for vertical alignment
+    st.sidebar.markdown(
+        """
+        <style>
+        [data-testid="stSidebar"] {
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-content {
+            flex-grow: 1;
+        }
+        .sidebar-footer {
+            margin-top: auto;
+            text-align: center;
+            padding-bottom: 20px;
+        }
+        </style>
+        <div class="sidebar-content">
+        """, 
+        unsafe_allow_html=True
+    )
+    
     # Navigation menu
     st.sidebar.title("Navigation")
     page = st.sidebar.radio(
@@ -346,26 +368,29 @@ def main():
         key="navigation"
     )
     
+    # Close the content div and start the footer
+    st.sidebar.markdown("</div><div class='sidebar-footer'>", unsafe_allow_html=True)
+    
+    # Add "Powered by" text and Madiro logo at the bottom of the sidebar
+    st.sidebar.markdown("<p style='color: #888; font-size: 0.8em;'>Powered by</p>", unsafe_allow_html=True)
+    st.sidebar.image(
+        "https://uc8ab7bcc5f25d935b07d8f4b425.previews.dropboxusercontent.com/p/thumb/ACmC2HTzRrV2Qo19LyzxNpAtrMu6bOUU0frPZXioZ3eIPZ03sgTqZyWxyRLOVocHk6nnYK4dNbyuW-B8z7HXJ0NwRz8O_5Ouw9Hdp5lNZxm8lbjQgufCK16MA_A4sOPJhun1pmH1vd3Mj-0rbPYWuqHUr8hgU_1ng6I27UjxFoJmxaerYxgndMeJuKcgr5I5C9uBzSAzCLkPR9aPfBontkXLpTn1TFtnEHJNXuWuQHhhwRWDjiO7sGkgmvSOMyrcHPhVYprnn_0eh8DwHU9rLqs0bDsvC-eb2klDBSektZ3pcR_1ULB07gk9dquOdkQ_3RQ5VqiSWWzVUzjHTa7-az-HWSWT5d_0c9rxfZ4H97dtYfw5OZvT_M-0uIs79YkFdyY/p.png?is_prewarmed=true",
+        width=120
+    )
+    
+    # Add version number (git commit hash) below the logo
+    commit_hash = get_git_commit()
+    st.sidebar.markdown(f"<p style='color: #888; font-size: 0.7em;'>Version: {commit_hash}</p>", unsafe_allow_html=True)
+    
+    # Close the footer div
+    st.sidebar.markdown("</div>", unsafe_allow_html=True)
+    
     if page == "Home":
         st.session_state.current_page = "home"
         show_home_page()
     elif page == "Configuration":
         st.session_state.current_page = "config"
         show_configuration_page()
-    
-    # Add a spacer to push the logo to the bottom
-    st.sidebar.markdown("<br>" * 30, unsafe_allow_html=True)
-    
-    # Add "Powered by" text and Madiro logo at the bottom of the sidebar
-    st.sidebar.markdown("<p style='text-align: center; color: #888; font-size: 0.8em;'>Powered by</p>", unsafe_allow_html=True)
-    st.sidebar.image(
-        "https://uc8ab7bcc5f25d935b07d8f4b425.previews.dropboxusercontent.com/p/thumb/ACmC2HTzRrV2Qo19LyzxNpAtrMu6bOUU0frPZXioZ3eIPZ03sgTqZyWxyRLOVocHk6nnYK4dNbyuW-B8z7HXJ0NwRz8O_5Ouw9Hdp5lNZxm8lbjQgufCK16MA_A4sOPJhun1pmH1vd3Mj-0rbPYWuqHUr8hgU_1ng6I27UjxFoJmxaerYxgndMeJuKcgr5I5C9uBzSAzCLkPR9aPfBontkXLpTn1TFtnEHJNXuWuQHhhwRWDjiO7sGkgmvSOMyrcHPhVYprnn_0eh8DwHU9rLqs0bDsvC-eb2klDBSektZ3pcR_1ULB07gk9dquOdkQ_3RQ5VqiSWWzVUzjHTa7-az-HWSWT5d_0c9rxfZ4H97dtYfw5OZvT_M-0uIs79YkFdyY/p.png?is_prewarmed=true",
-        width=200
-    )
-    
-    # Add version number (git commit hash) below the logo
-    commit_hash = get_git_commit()
-    st.sidebar.markdown(f"<p style='text-align: center; color: #888; font-size: 0.7em;'>Version: {commit_hash}</p>", unsafe_allow_html=True)
 
 def show_home_page():
     st.title("🏥 OpenMRS 3 Form Generator")
