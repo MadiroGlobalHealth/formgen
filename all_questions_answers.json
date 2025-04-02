@@ -1,268 +1,952 @@
 [
   {
-    "question_id": "littleInterestOrPleasureInDoingThings",
-    "question_label": "Little interest or pleasure in doing things?",
+    "question_id": "diagnosis",
+    "question_label": "Diagnosis",
     "questionOptions": {
       "answers": [
         {
-          "label": "Not at all (0 point)",
-          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+          "label": "Acute abdomen",
+          "concept": "2dfba50a-a997-441f-b65d-23bc2d5742c6"
         },
         {
-          "label": "Several days (1 point)",
-          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
+          "label": "Acute asthma",
+          "concept": "e1b51c42-041f-4a3f-9a31-0337642f42b6"
         },
         {
-          "label": "More than half the days (2 points)",
-          "concept": "234259ec-5368-4488-8482-4f261cc76714"
+          "label": "Acute chest syndrome",
+          "concept": "7f19a4fe-74a7-4e42-9acd-66367ed75ac2"
         },
         {
-          "label": "Nearly every day (3 points)",
-          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
+          "label": "Acute coronary syndrome (other than STEMI)",
+          "concept": "c5233b12-8196-4946-b77b-4b802aac7bee"
+        },
+        {
+          "label": "Acute diarrhea (bloody)",
+          "concept": "1b4d955d-e703-484d-8bfd-0c90b2a39285"
+        },
+        {
+          "label": "Acute diarrhea (non-bloody)",
+          "concept": "03f98e36-796b-47f9-94db-50194e27d35a"
+        },
+        {
+          "label": "Acute febrile illness (=<7 days)",
+          "concept": "42c9bc49-ac4d-4b86-8753-48d378075c59"
+        },
+        {
+          "label": "Acute flaccid paralysis",
+          "concept": "6a374a98-ddf7-4f8a-8e9f-ecd96ea100e4"
+        },
+        {
+          "label": "Acute jaundice syndrome",
+          "concept": "1123853b-0a4d-46f7-89e3-60a8bc21df14"
+        },
+        {
+          "label": "Acute psychosis (incl. post-partum psychosis)",
+          "concept": "b33dac1c-b0c0-4fcd-b639-661bb6678924"
+        },
+        {
+          "label": "Acute stress reaction",
+          "concept": "a2f8295b-1259-481f-8ef3-34e213b7b4d6"
+        },
+        {
+          "label": "Adjustment disorder",
+          "concept": "8fe96358-638b-45d6-a578-4001d25fcbe7"
+        },
+        {
+          "label": "Allergy/Anaphylaxis",
+          "concept": "b9ddbe43-35a4-476b-a9dd-063c62286be4"
+        },
+        {
+          "label": "Anaemia, unspecified",
+          "concept": "a116ddd7-46af-4183-8b76-babcf2029ed6"
+        },
+        {
+          "label": "Anxiety disorder",
+          "concept": "2564bdee-c24c-4d96-903e-d44010f2a8ec"
+        },
+        {
+          "label": "Apnoea of prematurity",
+          "concept": "ed87a574-6181-4dec-8449-ac4e23c3deaa"
+        },
+        {
+          "label": "Arrhythmia",
+          "concept": "26722ca1-acf1-4e1e-ba43-a571a99c76e0"
+        },
+        {
+          "label": "Bacterial meningitis",
+          "concept": "23c733cd-808d-4d23-b58c-78028e66528f"
+        },
+        {
+          "label": "Bereavement / grief",
+          "concept": "7d486d0c-0e2b-475d-8e17-07296cc624b9"
+        },
+        {
+          "label": "Bipolar disorder (incl. mania)",
+          "concept": "1ba02bf8-6bbe-46a6-baff-d18b5c9f6425"
+        },
+        {
+          "label": "Birth injury",
+          "concept": "b5d24e8d-e499-4152-9933-90407e7213b9"
+        },
+        {
+          "label": "Blunt chest injury",
+          "concept": "ef8b86ff-12db-4887-9ee9-7a7c9951613e"
+        },
+        {
+          "label": "Bronchiolitis/obstructive bronchitis",
+          "concept": "b7e10d5e-e8d4-4fbf-a3bd-905df49de45d"
+        },
+        {
+          "label": "Bronchospasm",
+          "concept": "fad26123-2928-47d8-99e6-dd2d6bde4c05"
+        },
+        {
+          "label": "Burns",
+          "concept": "719ea0d7-98fd-4e86-84be-451b8c0f6f54"
+        },
+        {
+          "label": "Burns / major",
+          "concept": "b0d0a019-7af4-49f7-86cb-99d9dccd1807"
+        },
+        {
+          "label": "Burns / minor deep",
+          "concept": "66660626-0209-4927-b70b-407adbdc176e"
+        },
+        {
+          "label": "Burns / minor superficial",
+          "concept": "5dab7064-d6c5-4229-b276-6e2b6d5e1c5c"
+        },
+        {
+          "label": "Candida albicans (candidiasis)",
+          "concept": "fab86bbb-2aa7-42d9-bab0-34973652d12d"
+        },
+        {
+          "label": "Cardiogenic shock",
+          "concept": "d24d0c85-2e0d-4572-8b92-85dde8267c3d"
+        },
+        {
+          "label": "Cardiovascular disease",
+          "concept": "6541ddce-0e3c-4b7d-ad52-2bfe18e24dd5"
+        },
+        {
+          "label": "Cerebral palsy/Neuro disability",
+          "concept": "e13baf3a-df54-404e-b53c-454810c7cbd4"
+        },
+        {
+          "label": "Chikungunya confirmed",
+          "concept": "46cbb6fa-7db6-4a5e-bcf4-d9ada1479ccc"
+        },
+        {
+          "label": "Chikungunya suspected",
+          "concept": "3fba4292-e70f-4c0a-b84f-208559dccbbc"
+        },
+        {
+          "label": "Childhood behavioral disorder (incl. ADHD, conduct disorder)",
+          "concept": "1189fb28-8d79-4d69-a434-63fed6e0ea60"
+        },
+        {
+          "label": "Childhood emotional disorder",
+          "concept": "52d85e63-b238-4161-985c-97f75ad80c9a"
+        },
+        {
+          "label": "Cholera (suspected)",
+          "concept": "0e8565a1-f02c-4981-a8b3-47c312f7ca5d"
+        },
+        {
+          "label": "Cholera confirmed",
+          "concept": "1de0008f-ca3d-4dda-80c5-a71c5039445e"
+        },
+        {
+          "label": "Chronic psychosis (incl. schizophrenia)",
+          "concept": "197f1f41-b0c7-407d-b95f-b1e26c3fd23c"
+        },
+        {
+          "label": "Common Scabies",
+          "concept": "ee6d9b72-a4de-4c0a-83ee-2611f7de5520"
+        },
+        {
+          "label": "Complicated ear infection",
+          "concept": "d5eebff7-d2aa-4b08-8653-9bcc35b9ae51"
+        },
+        {
+          "label": "Complicated Scabies",
+          "concept": "f08a6fb6-f6a3-4a54-a8fd-e27670302915"
+        },
+        {
+          "label": "Complications of SCD",
+          "concept": "fde22fd6-1351-4675-bb24-326a68a9b99b"
+        },
+        {
+          "label": "Congenital cardiac condition",
+          "concept": "3735615f-c334-4b0c-bb34-9a30f65e8cf1"
+        },
+        {
+          "label": "Congenital herpes virus infection",
+          "concept": "7d93eaf2-c0af-4bd9-9879-1cb14cf746b5"
+        },
+        {
+          "label": "Congenital malaria",
+          "concept": "4522f6b8-36ac-4c78-b250-07a4ba4daa46"
+        },
+        {
+          "label": "Congenital malformation",
+          "concept": "2c8cc5c6-ba1c-488b-b7ed-5159c907c1d0"
+        },
+        {
+          "label": "Congenital or acquired cardiac pathology",
+          "concept": "425fcf58-1110-4eb3-8485-ba950f56890f"
+        },
+        {
+          "label": "Congenital pathology",
+          "concept": "6229ba1a-a44d-4930-a740-40f5d41c493e"
+        },
+        {
+          "label": "Congenital syphilis",
+          "concept": "2e62aaa6-bf40-4a3c-9d05-a7d4e539c837"
+        },
+        {
+          "label": "Congestive Heart Failure",
+          "concept": "6a7a9d6a-e8b6-4ffb-8321-a56e9e4473e0"
+        },
+        {
+          "label": "Contusion",
+          "concept": "49205bcf-2c99-4614-8342-c47e5e377f8c"
+        },
+        {
+          "label": "COPD",
+          "concept": "0d9a7323-b54a-4d2b-a231-e34fa54e3a54"
+        },
+        {
+          "label": "Covid-19 confirmed",
+          "concept": "a70fdf0e-87d4-4219-9763-d3d4fdf9d6dc"
+        },
+        {
+          "label": "Covid-19 probable",
+          "concept": "163727b7-0c90-4a14-83fa-707c4f28860f"
+        },
+        {
+          "label": "Crusted Scabies",
+          "concept": "7b0c53de-4741-4c8e-85b4-0413d1d6ef6f"
+        },
+        {
+          "label": "Cutaneous leishmaniasis",
+          "concept": "a87831c6-7cf0-462a-8600-40e43a222d00"
+        },
+        {
+          "label": "Dehydration",
+          "concept": "daffa400-6159-412a-b902-8b3e9e3edd81"
+        },
+        {
+          "label": "Dengue confirmed",
+          "concept": "4b01305f-ca82-454b-ab06-ab98a53eaaae"
+        },
+        {
+          "label": "Dengue suspected",
+          "concept": "c0574b8a-eff3-4ab6-8534-b386a314ca53"
+        },
+        {
+          "label": "Dental problem",
+          "concept": "ae3908af-57f7-4c7e-ba19-54a26422d231"
+        },
+        {
+          "label": "Depression",
+          "concept": "2066f043-2f21-4c19-8c04-77301d7404f9"
+        },
+        {
+          "label": "Developmental disorder (incl. intellectual disability, autism)",
+          "concept": "63f73696-3d7c-4dc5-8c16-5382c20c3f9f"
+        },
+        {
+          "label": "Diabetes and complications",
+          "concept": "28d17413-ffae-4ed4-a46b-62f8b4deb6d7"
+        },
+        {
+          "label": "Diabetes Mellitus in pregnancy",
+          "concept": "2b816c77-3c82-4444-b91a-f0f7b9ddaad5"
+        },
+        {
+          "label": "Diabetes type 2 and complications",
+          "concept": "27dd79e6-2e3c-4687-8ef9-d8ab0adb81b4"
+        },
+        {
+          "label": "Diabetes Type I and complications",
+          "concept": "d10c2b41-593a-414f-8f7e-a445e9d4f22e"
+        },
+        {
+          "label": "Diarrhea (persistent)",
+          "concept": "d3ea64b2-7587-4497-b5d9-dd55ccc6b0f1"
+        },
+        {
+          "label": "Diphtheria",
+          "concept": "2425bb5d-e9df-4e64-b119-ae42eaae1a35"
+        },
+        {
+          "label": "Dislocation of major joints",
+          "concept": "2be58ed6-da1c-4081-9cd7-28942a796fd1"
+        },
+        {
+          "label": "Dislocation of minors joints",
+          "concept": "fa42cc09-5223-4048-ab73-fbe955d1e92f"
+        },
+        {
+          "label": "Dissociative / Conversive disorder",
+          "concept": "58881584-4f0e-4cf3-b2bf-d9f0898ae106"
+        },
+        {
+          "label": "Dog bite",
+          "concept": "087fd7f9-816c-4f1b-80b2-a949c83554f2"
+        },
+        {
+          "label": "Enuresis / Encopresis",
+          "concept": "a22392b2-c8dc-43b5-8f8a-b18a223f25f2"
+        },
+        {
+          "label": "Epilepsy/Seizures",
+          "concept": "88f53582-4db7-4936-970d-7b6f685f0c68"
+        },
+        {
+          "label": "Extra pulmonary tuberculosis",
+          "concept": "17ca2ee9-e8a5-48da-bb44-2a8988acee51"
+        },
+        {
+          "label": "Eye diseases (including trachoma)",
+          "concept": "af6cb265-7afd-47d2-98b4-600a4a5f19b0"
+        },
+        {
+          "label": "Febrile convulsions",
+          "concept": "3996fcd4-f8a5-4f69-9ecc-f53944e35867"
+        },
+        {
+          "label": "Febrile Illness",
+          "concept": "6c559f25-6921-4cce-b590-2630c8b834c2"
+        },
+        {
+          "label": "FGM/C related complications (exclude obstetrical complications)",
+          "concept": "272effc4-0c18-4524-bfe6-8f7dccad87eb"
+        },
+        {
+          "label": "FGM/C Type I",
+          "concept": "d5f1113c-595f-43ee-b9ca-1d0ddd930169"
+        },
+        {
+          "label": "FGM/C Type II",
+          "concept": "679354b5-3440-4deb-bc62-325c3c1d6e35"
+        },
+        {
+          "label": "FGM/C Type III",
+          "concept": "5c5cb558-5e46-490c-916c-5232a52204b7"
+        },
+        {
+          "label": "FGM/C Type IV",
+          "concept": "21b0cbfc-cd0f-4252-af4a-b7a3fcd643ba"
+        },
+        {
+          "label": "Fracture / closed",
+          "concept": "92fe911f-3cfc-455f-8dde-1db88f53fee6"
+        },
+        {
+          "label": "Fracture / open",
+          "concept": "0942b450-996d-4402-b72f-1637c31972f1"
+        },
+        {
+          "label": "Gastric ulcer",
+          "concept": "03e87992-b1e3-4a4c-97a8-f78f670aa772"
+        },
+        {
+          "label": "Gastritis",
+          "concept": "2748d2ac-2c6e-4d76-884b-8ba9f952012f"
+        },
+        {
+          "label": "Generalized anxiety",
+          "concept": "aa0e51d4-7707-4ad4-ade2-e9fef854eb82"
+        },
+        {
+          "label": "Gynaecological and Obstetrical cases",
+          "concept": "af1b7a3d-f583-46ad-a7b1-b13f95b3c484"
+        },
+        {
+          "label": "Healthy Patient for Medical certificate",
+          "concept": "a8fd27fd-b99e-40a4-9df4-f7395e455196"
+        },
+        {
+          "label": "Hepatitis A",
+          "concept": "0f4f2114-7c52-466f-ae8f-7e62ff9aa273"
+        },
+        {
+          "label": "Hepatitis B",
+          "concept": "9a3979c9-a92f-4a74-adb0-353a56d0d0e7"
+        },
+        {
+          "label": "Hepatitis Delta",
+          "concept": "78c7cf86-ea33-4f82-baec-fcc3bfe41d93"
+        },
+        {
+          "label": "Hepatitis E",
+          "concept": "0687435a-d6f5-4a8e-be93-26fd0d43afa5"
+        },
+        {
+          "label": "HIV Infection confirmed",
+          "concept": "38162348-f696-4a53-9c1d-d2690cb52c99"
+        },
+        {
+          "label": "HIV infection suspected",
+          "concept": "b97081fb-40c7-4fdf-8b14-d88857ba710f"
+        },
+        {
+          "label": "Human African Trypanosomiasis",
+          "concept": "4c81c4be-6033-4498-becd-a79a80da493e"
+        },
+        {
+          "label": "Hyperglycemia",
+          "concept": "f4b8e92b-94eb-40ed-a4cc-f072cb62b764"
+        },
+        {
+          "label": "Hyperreactive splenomegaly due to malaria",
+          "concept": "011da844-01d2-4840-b3e1-663d3ad11e15"
+        },
+        {
+          "label": "Hypertension",
+          "concept": "10f3b49c-c3dc-4aa7-857f-3f9bb7df8dd0"
+        },
+        {
+          "label": "Hypertensive crisis",
+          "concept": "3d7fe91d-2153-45cb-983c-9712d81a3cd1"
+        },
+        {
+          "label": "Hypoglycemia",
+          "concept": "7e848f32-6afd-4e14-8cb9-cc8402f42363"
+        },
+        {
+          "label": "Hypothermia",
+          "concept": "f031826b-0409-4a4b-b0a5-85eea29f1531"
+        },
+        {
+          "label": "Hypovolemic shock",
+          "concept": "d8c5769e-b090-4bcb-8942-4a3d7c4f58ff"
+        },
+        {
+          "label": "Infectious diseases not otherwise classified",
+          "concept": "d661ddfe-f807-41aa-ae46-a4c2f9f4203f"
+        },
+        {
+          "label": "Intestinal parasitic infections (suspected)",
+          "concept": "320e2c72-166a-4b28-b7f3-18c15d876c7a"
+        },
+        {
+          "label": "Ischaemic stroke / Intracerebral haemorrhage",
+          "concept": "bff16ef7-3429-4cff-bda0-5cc13a77ae39"
+        },
+        {
+          "label": "Lower respiratory tract infection",
+          "concept": "ea03ce93-7c26-47a3-af09-5a21b7371db3"
+        },
+        {
+          "label": "Malnutrition",
+          "concept": "05cd25b0-bbf3-4434-9cf7-54082d52683a"
+        },
+        {
+          "label": "Measles (complicated)",
+          "concept": "d3be30c3-bd87-4015-a8e2-823ac12f1d65"
+        },
+        {
+          "label": "Measles (suspected)",
+          "concept": "8427a950-087d-45e3-993f-810a896bc4a8"
+        },
+        {
+          "label": "Measles (uncomplicated)",
+          "concept": "07b53338-1a68-4826-bc7a-3fb5db76a4b2"
+        },
+        {
+          "label": "Medically Unexplained Physical Symptoms",
+          "concept": "9df01581-6135-4876-8fb8-cbaaa522064e"
+        },
+        {
+          "label": "Meningeal TB",
+          "concept": "7477e7a3-d6b4-46c0-b7cf-b973c0c0584d"
+        },
+        {
+          "label": "Meningitis",
+          "concept": "a4b63517-6046-4279-b0ca-86409f3b7e63"
+        },
+        {
+          "label": "Meningitis suspected",
+          "concept": "346681f0-fe13-41bf-8578-252f1b471527"
+        },
+        {
+          "label": "Mental and psychiatric conditions (other)",
+          "concept": "e51bba88-1954-4803-9762-8840ab5ae205"
+        },
+        {
+          "label": "Moderate acute malnutrition",
+          "concept": "c284603a-988f-4a55-a634-82c681424ab4"
+        },
+        {
+          "label": "Mucocutaneous Candidiasis",
+          "concept": "d64c3ced-f98e-4514-bab7-1afcbf2bd68e"
+        },
+        {
+          "label": "Musculoskeletal conditions (infectious origin)",
+          "concept": "d98a4da0-68ef-4ae5-8128-9498f5421eb2"
+        },
+        {
+          "label": "Musculoskeletal conditions (non-infectious)",
+          "concept": "3d4196dc-a985-4123-b13f-9f4de0e9c598"
+        },
+        {
+          "label": "Necrotizing & bullous skin infections",
+          "concept": "6f609690-822a-41a6-aa01-e9bc60ab7906"
+        },
+        {
+          "label": "Neglected tropical disease (other)",
+          "concept": "4e3f379e-18bf-4c64-bef3-4c6be004baf7"
+        },
+        {
+          "label": "Neonatal anaemia",
+          "concept": "11e0d841-9d0b-48da-9d27-6f80fe57d377"
+        },
+        {
+          "label": "Neonatal aspiration of meconium",
+          "concept": "34dea12e-c605-42f7-a8f2-79471d1c6846"
+        },
+        {
+          "label": "Neonatal conditions (other)",
+          "concept": "e8bc8272-00d7-4675-97b7-c5b23b6db0ab"
+        },
+        {
+          "label": "Neonatal conjunctivitis",
+          "concept": "ab7f2fa6-ab47-43ed-882d-71821024aaf0"
+        },
+        {
+          "label": "Neonatal convulsions",
+          "concept": "b2b47f30-ba2f-49cc-850e-0c842839488c"
+        },
+        {
+          "label": "Neonatal infectious diseases",
+          "concept": " f5bdd2d4-48c1-41ce-a93f-760e39d9bcf7"
+        },
+        {
+          "label": "Neonatal jaundice",
+          "concept": "2061726f-aa58-4600-a197-36c7114697b7"
+        },
+        {
+          "label": "Neonatal meconial aspiration",
+          "concept": "6c457d77-d370-414e-b125-8f6eb8a34800"
+        },
+        {
+          "label": "Neonatal Necrotizing Enterocolitis",
+          "concept": "7627c248-a9f9-40fc-a573-c125c8a0761b"
+        },
+        {
+          "label": "Neonatal Necrotizing Enterocolitis",
+          "concept": "7627c248-a9f9-40fc-a573-c125c8a0761b"
+        },
+        {
+          "label": "Neonatal non infectious conditions",
+          "concept": "4659d66f-9073-41ce-a7be-77af000689a2"
+        },
+        {
+          "label": "Neonatal pneumonia",
+          "concept": "9145a74f-f905-4119-9ca5-2ef1477c3ae3"
+        },
+        {
+          "label": "Neonatal pneumothorax",
+          "concept": "8c729f2a-d341-4188-afb9-fb9a5524b3d7"
+        },
+        {
+          "label": "Neonatal sepsis/septic shock",
+          "concept": "b30d2825-c1ef-4223-8735-fe8c85756c14"
+        },
+        {
+          "label": "Neonatal severe hypoglycemia",
+          "concept": "fbd4161f-4e9d-4acd-a91b-cf1ba666b501"
+        },
+        {
+          "label": "Neonatal tetanus",
+          "concept": "7ee30a7d-57de-4f03-9b52-79471717df13"
+        },
+        {
+          "label": "Neonatal tuberculosis",
+          "concept": "e43b1ffc-b558-4b31-a01b-7340d16dbab2"
+        },
+        {
+          "label": "Nephrotic Syndrome & Acute Glomerulonephritis",
+          "concept": "96fb9345-0260-4a54-82ce-4c30e1ce8d1c"
+        },
+        {
+          "label": "Neuro disability of any cause",
+          "concept": "a1acbf76-8182-436f-8933-b6b39b11082b"
+        },
+        {
+          "label": "Newborn to an HIV+ mother",
+          "concept": "8f5229a3-99c9-40b0-a951-67340a28d472"
+        },
+        {
+          "label": "No diagnosis",
+          "concept": "dc77c73a-5ce5-4aac-821e-81f19f81b65f"
+        },
+        {
+          "label": "Non cardiac congenital pathology",
+          "concept": "1efb3c70-da5f-4a32-81f0-3fae6768b406"
+        },
+        {
+          "label": "Non urgent surgical conditions",
+          "concept": "b17fa4c4-9f75-4f21-8a0b-c0579f923573"
+        },
+        {
+          "label": "Non violence-related injuries",
+          "concept": "fdff6a8c-b71c-472d-b8f8-5171ceb625c4"
+        },
+        {
+          "label": "Observation",
+          "concept": "d9f335fd-153f-4125-b615-a526f77d31ed"
+        },
+        {
+          "label": "Obsessive compulsive disorder",
+          "concept": "b3271a16-d7d2-42f9-b0de-886892516936"
+        },
+        {
+          "label": "Obstetric cases",
+          "concept": "19737e4d-6324-411b-8ed9-fe09c0d16832"
+        },
+        {
+          "label": "Omphalitis/skin infection",
+          "concept": "88ac8d11-3d09-47a1-87cb-4a9e4a1b93c4"
+        },
+        {
+          "label": "Oral and digestive severe candidiasis",
+          "concept": "a3eecae0-8ad4-4458-aab6-f3aa818979c5"
+        },
+        {
+          "label": "Other",
+          "concept": "790b41ce-e1e7-11e8-b02f-0242ac130002"
+        },
+        {
+          "label": "Other bites and stings",
+          "concept": "f5a93496-81fa-441f-a09c-3899b0fb2a1c"
+        },
+        {
+          "label": "Other gastrointestinal diseases",
+          "concept": "dfd83fb5-c687-419a-9c41-8c16784df367"
+        },
+        {
+          "label": "Other neurological conditions",
+          "concept": "15f74297-77dc-405a-b060-42611063c604"
+        },
+        {
+          "label": "Other non communicable diseases",
+          "concept": "6b98ea27-b486-4d1c-a57c-73f7423c1814"
+        },
+        {
+          "label": "Panic disorder",
+          "concept": "473f0ea3-92e5-4a99-bbe0-358e371355ee"
+        },
+        {
+          "label": "Perinatal asphyxia and complications",
+          "concept": "3fcb4f1c-68be-4adb-b0e9-1cf7138933c4"
+        },
+        {
+          "label": "Persistent fever ( >7 days)",
+          "concept": "cdbeb45d-4a1f-4893-a9ef-aca653597fd3"
+        },
+        {
+          "label": "Phobia (social, specific, agoraphobia)",
+          "concept": "ae1ab702-fa58-4648-95e4-acca5c9078f7"
+        },
+        {
+          "label": "Poisoning by drugs, medicaments and biological substances",
+          "concept": "da33d74e-33b3-495a-9d7c-aa00a-aa0139"
+        },
+        {
+          "label": "Poliomyelitis confirmed",
+          "concept": "2deaaf7c-eab8-4acc-9728-301fd9e58062"
+        },
+        {
+          "label": "Post surgical complications (non infectious)",
+          "concept": "55f4f8f5-86fd-4a52-a835-5b6824d58680"
+        },
+        {
+          "label": "Post surgical infection",
+          "concept": "f3154d25-73c6-4a67-9560-36679a3b4c25"
+        },
+        {
+          "label": "Post-Traumatic Stress Disorder",
+          "concept": "ec7a63e8-5d0b-4dcf-8f72-7529c1df699a"
+        },
+        {
+          "label": "Prematurity and/or low birth weight",
+          "concept": "63122ad6-bba8-4a9f-9376-c0a5b179756f"
+        },
+        {
+          "label": "Pulmonary tuberculosis",
+          "concept": "b6aec37b-8990-48c3-9ece-2e3edd5dbfe9"
+        },
+        {
+          "label": "Rabies",
+          "concept": "2f07701b-95b2-4235-8c81-448da7f1aaa3"
+        },
+        {
+          "label": "Respiratory distress syndrome of the newborn",
+          "concept": "88b16a71-8664-4782-8f09-68869fb2dedd"
+        },
+        {
+          "label": "Rheumatic heart disease",
+          "concept": "d4fa7b29-7228-4810-a7d3-784e825ea259"
+        },
+        {
+          "label": "Risk of sepsis",
+          "concept": "a1eb6c76-ceec-4d5b-81ef-f125ea7d2eab"
+        },
+        {
+          "label": "Self-harming behavior / Suicide attempt",
+          "concept": "b27187bd-e94a-4dbc-9a77-46c0cefad25a"
+        },
+        {
+          "label": "Septic shock",
+          "concept": "8ea542b2-d6ce-442c-8817-c64716394dc9"
+        },
+        {
+          "label": "Severe acute malnutrition",
+          "concept": "ece0907c-092d-466d-8e82-2f101fe67f19"
+        },
+        {
+          "label": "Severe Acute Malnutrition (Kwashiorkor)",
+          "concept": "1fc04050-6ebd-432b-9519-63c5d14f8f0e"
+        },
+        {
+          "label": "Severe Acute Malnutrition (Marasmus - Kwashiorkor)",
+          "concept": "decc099e-4022-4e35-95f7-6f0485551fa7"
+        },
+        {
+          "label": "Severe Acute Malnutrition (Marasmus)",
+          "concept": "d5e64667-5e9d-41aa-b6bf-76821db16144"
+        },
+        {
+          "label": "Severe anaemia",
+          "concept": "cf6cd6c9-cc7d-4bb6-aa0d-4471cf163357"
+        },
+        {
+          "label": "Severe dehydration",
+          "concept": "a38a73a5-e324-49ba-9e0c-4c4e0fde3556"
+        },
+        {
+          "label": "Severe malaria",
+          "concept": "da33d74e-33b3-495a-9d7c-aa00a-aa0124"
+        },
+        {
+          "label": "Sexual violence / rape",
+          "concept": "51c61fb2-017e-43d7-9195-e95cc2cb9304"
+        },
+        {
+          "label": "Sexually transmitted disease (STI)",
+          "concept": "799c78cc-8c8f-44e2-9223-0c8e607677a1"
+        },
+        {
+          "label": "Shigellosis - Salmonellosis",
+          "concept": "720c9b5d-f661-4a4c-9397-dd802283ed20"
+        },
+        {
+          "label": "Shock unspecified",
+          "concept": "da33d74e-33b3-495a-9d7c-aa00a-aa0128"
+        },
+        {
+          "label": "Sickle cell disease and complications",
+          "concept": "e8a1ffbd-9575-4f94-b396-0575c3fcd186"
+        },
+        {
+          "label": "Simple malaria",
+          "concept": "da33d74e-33b3-495a-9d7c-aa00a-aa0131"
+        },
+        {
+          "label": "Skin and soft tissue conditions",
+          "concept": "6b624ce0-f6f0-455e-a542-bbaaba8f1dbb"
+        },
+        {
+          "label": "Snake bites",
+          "concept": "8d69cf7f-b82c-4d7f-8d90-417b6fde8ad1"
+        },
+        {
+          "label": "Sprain and strains",
+          "concept": "e4f20e2e-0a05-49ae-913b-1264f6e925a6"
+        },
+        {
+          "label": "Stemi",
+          "concept": "6cb4b198-609b-4dda-b1da-92f17ab21ca1"
+        },
+        {
+          "label": "Stroke / CVA",
+          "concept": "bff16ef7-3429-4cff-bda0-5cc13a77ae39"
+        },
+        {
+          "label": "Substance-related disorders",
+          "concept": "fcc01124-3d7b-4e6f-be35-50233a7f64cb"
+        },
+        {
+          "label": "Suspected or confirmed malignancy",
+          "concept": "be1800cf-19cd-4074-9398-f0962fc3db8c"
+        },
+        {
+          "label": "Tetanus",
+          "concept": "ac66146e-5919-428c-8ed6-6a5a764ab06a"
+        },
+        {
+          "label": "Toxicity / poisoning",
+          "concept": "da33d74e-33b3-495a-9d7c-aa00a-aa0139"
+        },
+        {
+          "label": "Transient tachypnoea of the newborn",
+          "concept": "da33d74e-33b3-495a-9d7c-aa00a-aa0140"
+        },
+        {
+          "label": "Traumatic brain injury",
+          "concept": "952d4753-7f1c-40fc-94e4-0dd98fdfdbba"
+        },
+        {
+          "label": "Typhoid Fever",
+          "concept": "a1a7f04a-997b-4914-8f32-4546c2554519"
+        },
+        {
+          "label": "Upper respiratory tract infection",
+          "concept": "bbfb753f-578c-4c57-8118-4e82857acd76"
+        },
+        {
+          "label": "Urgent surgical conditions",
+          "concept": "3fc5539b-7975-443a-86c1-2300d1755237"
+        },
+        {
+          "label": "Urolithiasis / Renal colic",
+          "concept": "da33d74e-33b3-495a-9d7c-aa00a-aa0145"
+        },
+        {
+          "label": "UTI and renal tract acute pathology",
+          "concept": "da33d74e-33b3-495a-9d7c-aa00a-aa0146"
+        },
+        {
+          "label": "Varicella",
+          "concept": "da33d74e-33b3-495a-9d7c-aa00a-aa0147"
+        },
+        {
+          "label": "Violence-related injuries",
+          "concept": "da33d74e-33b3-495a-9d7c-aa00a-aa0148"
+        },
+        {
+          "label": "Viral haemorrhagic fevers",
+          "concept": "da33d74e-33b3-495a-9d7c-aa00a-aa0149"
+        },
+        {
+          "label": "Visceral leishmaniasis",
+          "concept": "c2ddc071-9590-4b24-b797-1e1769662a5b"
+        },
+        {
+          "label": "Vit A deficiency",
+          "concept": "bc84fbf4-f216-43d0-8501-73572496635c"
+        },
+        {
+          "label": "Vit B complex deficiency",
+          "concept": "530acec6-b269-410e-89b1-abc15dac02e9"
+        },
+        {
+          "label": "Vit C deficiency (scurvy)",
+          "concept": "a54e6856-8c64-4d1f-a2a0-1f916eb413bb"
+        },
+        {
+          "label": "Vit D deficiency (rickets)",
+          "concept": "899c74ff-c155-4263-aa2c-587dac49635f"
+        },
+        {
+          "label": "Whooping cough",
+          "concept": "c3d7e630-1a84-481a-ba12-e21c089bbb35"
+        },
+        {
+          "label": "Wound or laceration / chronic Leg ulcers",
+          "concept": "d8e2b136-f5fc-4b2c-a967-f6f26daf35da"
+        },
+        {
+          "label": "Wound or laceration / complicated",
+          "concept": "12479842-f18b-4e1c-9b30-58153729af00"
+        },
+        {
+          "label": "Wound or laceration / simple",
+          "concept": "74d5829d-b032-4a60-9997-0f5876df890d"
+        },
+        {
+          "label": "Yellow fever",
+          "concept": "09015081-016e-431c-bae3-5a2ffdb18734"
         }
       ]
     }
   },
   {
-    "question_id": "feelingDownDepressedOrHopeless",
-    "question_label": "Feeling down, depressed, or hopeless?",
+    "question_id": "bloodGroup",
+    "question_label": "Blood group",
     "questionOptions": {
       "answers": [
         {
-          "label": "Not at all (0 point)",
-          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+          "label": "A negative",
+          "concept": "47f7b4f0-ed66-4b6c-9692-338e968d82f5"
         },
         {
-          "label": "Several days (1 point)",
-          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
+          "label": "A positive",
+          "concept": "ad2b3885-2b7d-4872-938a-8e605261b02b"
         },
         {
-          "label": "More than half the days (2 points)",
-          "concept": "234259ec-5368-4488-8482-4f261cc76714"
+          "label": "AB negative",
+          "concept": "fdb0af2d-6e3e-4246-9b79-77258de8fa8c"
         },
         {
-          "label": "Nearly every day (3 points)",
-          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
+          "label": "AB positive",
+          "concept": "5467196c-da30-4c86-9e2c-3be8d5ffb392"
+        },
+        {
+          "label": "B negative",
+          "concept": "e7111eb7-f2e7-4b26-9b49-4fbb15be195d"
+        },
+        {
+          "label": "B positive",
+          "concept": "e735b1c9-f9e3-4497-a3c8-87351a1f2b41"
+        },
+        {
+          "label": "O negative",
+          "concept": "8c4b06e5-b93b-488f-8554-193834599392"
+        },
+        {
+          "label": "O positive",
+          "concept": "ab989b8a-ec45-44d6-856a-5d3d580c0afb"
         }
       ]
     }
   },
   {
-    "question_id": "troubleFallingOrStayingAsleepOrSleepingTooMuch",
-    "question_label": "Trouble falling or staying asleep, or sleeping too much?",
+    "question_id": "typeOfComponent",
+    "question_label": "Type of component",
     "questionOptions": {
       "answers": [
         {
-          "label": "Not at all (0 point)",
-          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+          "label": "Platelets",
+          "concept": "e202390d-4db4-46e8-83c8-face1bf4e8c4"
         },
         {
-          "label": "Several days (1 point)",
-          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
+          "label": "Red blood cells",
+          "concept": "fee8d1a9-dc27-42c8-aa7a-86601513438d"
         },
         {
-          "label": "More than half the days (2 points)",
-          "concept": "234259ec-5368-4488-8482-4f261cc76714"
-        },
-        {
-          "label": "Nearly every day (3 points)",
-          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
+          "label": "Whole blood",
+          "concept": "c5864f95-4b3d-4265-861d-ec0d0a58ea52"
         }
       ]
     }
   },
   {
-    "question_id": "feelingTiredOrHavingLittleEnergy",
-    "question_label": "Feeling tired or having little energy?",
+    "question_id": "crossMatch",
+    "question_label": "Cross match",
     "questionOptions": {
       "answers": [
         {
-          "label": "Not at all (0 point)",
-          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
+          "label": "Compatible",
+          "concept": "a3c06d32-8789-444e-a3aa-eec716554c91"
         },
         {
-          "label": "Several days (1 point)",
-          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
-        },
-        {
-          "label": "More than half the days (2 points)",
-          "concept": "234259ec-5368-4488-8482-4f261cc76714"
-        },
-        {
-          "label": "Nearly every day (3 points)",
-          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
-        }
-      ]
-    }
-  },
-  {
-    "question_id": "poorAppetiteOrOvereating",
-    "question_label": "Poor appetite or overeating?",
-    "questionOptions": {
-      "answers": [
-        {
-          "label": "Not at all (0 point)",
-          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
-        },
-        {
-          "label": "Several days (1 point)",
-          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
-        },
-        {
-          "label": "More than half the days (2 points)",
-          "concept": "234259ec-5368-4488-8482-4f261cc76714"
-        },
-        {
-          "label": "Nearly every day (3 points)",
-          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
-        }
-      ]
-    }
-  },
-  {
-    "question_id": "feelingBadAboutYourselfOrThatYouAreAFailureOrHaveLetYourselfOrYourFamilyDown",
-    "question_label": "Feeling bad about yourself - or that you are a failure or have let yourself or your family down?",
-    "questionOptions": {
-      "answers": [
-        {
-          "label": "Not at all (0 point)",
-          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
-        },
-        {
-          "label": "Several days (1 point)",
-          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
-        },
-        {
-          "label": "More than half the days (2 points)",
-          "concept": "234259ec-5368-4488-8482-4f261cc76714"
-        },
-        {
-          "label": "Nearly every day (3 points)",
-          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
-        }
-      ]
-    }
-  },
-  {
-    "question_id": "troubleConcentratingOnThingsSuchAsReadingTheNewspaperOrWatchingTelevision",
-    "question_label": "Trouble concentrating on things, such as reading the newspaper or watching television?",
-    "questionOptions": {
-      "answers": [
-        {
-          "label": "Not at all (0 point)",
-          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
-        },
-        {
-          "label": "Several days (1 point)",
-          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
-        },
-        {
-          "label": "More than half the days (2 points)",
-          "concept": "234259ec-5368-4488-8482-4f261cc76714"
-        },
-        {
-          "label": "Nearly every day (3 points)",
-          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
-        }
-      ]
-    }
-  },
-  {
-    "question_id": "movingOrSpeakingSoSlowlyThatOtherPeopleCouldHaveNoticedOrTheOppositeBeingSoFidgetyOrRestlessThatYouHaveBeenMovingAroundALotMoreThanUsual",
-    "question_label": "Moving or speaking so slowly that other people could have noticed? Or the opposite - being so fidgety or restless that you have been moving around a lot more than usual?",
-    "questionOptions": {
-      "answers": [
-        {
-          "label": "Not at all (0 point)",
-          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
-        },
-        {
-          "label": "Several days (1 point)",
-          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
-        },
-        {
-          "label": "More than half the days (2 points)",
-          "concept": "234259ec-5368-4488-8482-4f261cc76714"
-        },
-        {
-          "label": "Nearly every day (3 points)",
-          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
-        }
-      ]
-    }
-  },
-  {
-    "question_id": "thoughtsThatYouWouldBeBetterOffDeadOrOfHurtingYourselfInSomeWay",
-    "question_label": "Thoughts that you would be better off dead, or of hurting yourself in some way?",
-    "questionOptions": {
-      "answers": [
-        {
-          "label": "Not at all (0 point)",
-          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
-        },
-        {
-          "label": "Several days (1 point)",
-          "concept": "b631d160-8d40-4cf7-92cd-67f628c889e8"
-        },
-        {
-          "label": "More than half the days (2 points)",
-          "concept": "234259ec-5368-4488-8482-4f261cc76714"
-        },
-        {
-          "label": "Nearly every day (3 points)",
-          "concept": "8ff1f85c-4f04-4f5b-936a-5aa9320cb66e"
-        }
-      ]
-    }
-  },
-  {
-    "question_id": "ifYouCheckedOffAnyProblemsHowDifficultHaveTheseProblemsMadeItForYouToDoYourWorkTakeCareOfThingsAtHomeOrGetAlongWithOtherPeople",
-    "question_label": "If you checked off any problems, how difficult have these problems made it for you to do your work, take care of things at home, or get along with other people?",
-    "questionOptions": {
-      "answers": [
-        {
-          "label": "Not difficult at all",
-          "concept": "ed0e2463-c990-4341-b095-53b899707af9"
-        },
-        {
-          "label": "Somewhat difficult",
-          "concept": "243698be-42a0-46da-8be8-21c774f2f42a"
-        },
-        {
-          "label": "Very difficult",
-          "concept": "45125711-2156-475e-ac7e-6eed34b976a7"
-        },
-        {
-          "label": "Extremely difficult",
-          "concept": "7914639c-89bc-4ff9-bff5-06b5c22aed11"
-        }
-      ]
-    }
-  },
-  {
-    "question_id": "depressionSeverityScale",
-    "question_label": "Depression severity scale",
-    "questionOptions": {
-      "answers": [
-        {
-          "label": "PHQ9 score <5: No depression",
-          "concept": "5aa4edf5-b218-4470-b5da-ad1d88007954"
-        },
-        {
-          "label": "PHQ9 score 5-9: Minimal symptoms",
-          "concept": "9d7d154f-e7a1-4490-b93a-85f5c2157f92"
-        },
-        {
-          "label": "PHQ9 score 10-14: Minor to mild depression (or dysthymia)",
-          "concept": "ed7484ef-a3ea-4c95-bf59-58987c7f6d7c"
-        },
-        {
-          "label": "PHQ9 score 15-19: Major depression",
-          "concept": "d163711c-9fcf-4050-b015-d3463b4602fa"
-        },
-        {
-          "label": "PHQ9 score >19: Severe depression",
-          "concept": "0ff3a7dc-1a6e-4453-91d5-29cf6a9f790c"
+          "label": "Incompatible",
+          "concept": "9a2f0c9d-33b9-45e5-8eff-6b47dadefa00"
         }
       ]
     }

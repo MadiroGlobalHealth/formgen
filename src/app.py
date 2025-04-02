@@ -26,6 +26,51 @@ from src.form_generator import (
     initialize_option_sets
 )
 
+# Load the configuration settings from config.json
+def load_config():
+    try:
+        with open('config.json', 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        st.error(f"Error loading configuration: {str(e)}")
+        return {"columns": {}}
+
+# Save configuration to config.json
+def save_config(config):
+    try:
+        with open('config.json', 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=4)
+        return True
+    except Exception as e:
+        st.error(f"Error saving configuration: {str(e)}")
+        return False
+
+# Function to get default column mappings
+def get_default_column_mappings():
+    return {
+        "TOOLTIP_COLUMN_NAME": "Tooltip",
+        "TRANSLATION_SECTION_COLUMN": "Translation - Section",
+        "TRANSLATION_QUESTION_COLUMN": "Translation - Question", 
+        "TRANSLATION_TOOLTIP_COLUMN": "Translation - Tooltip",
+        "TRANSLATION_ANSWER_COLUMN": "Translation",
+        "QUESTION_COLUMN": "Question",
+        "LABEL_COLUMN": "Label if different",
+        "QUESTION_ID_COLUMN": "Question ID",
+        "EXTERNAL_ID_COLUMN": "External ID",
+        "DATATYPE_COLUMN": "Datatype",
+        "VALIDATION_COLUMN": "Validation (format)",
+        "MANDATORY_COLUMN": "Mandatory",
+        "RENDERING_COLUMN": "Rendering",
+        "LOWER_LIMIT_COLUMN": "Lower limit",
+        "UPPER_LIMIT_COLUMN": "Upper limit",
+        "DEFAULT_VALUE_COLUMN": "Default value",
+        "CALCULATION_COLUMN": "Calculation",
+        "SKIP_LOGIC_COLUMN": "Skip logic",
+        "PAGE_COLUMN": "Page",
+        "SECTION_COLUMN": "Section",
+        "OPTION_SET_COLUMN": "OptionSet name"
+    }
+
 def get_download_link(filepath, filename):
     """
     Generate a download link for a file
@@ -50,11 +95,22 @@ def generate_forms_from_sheets(metadata_file, selected_sheets):
             st.info("If the file was created or saved with a newer version of Excel, try saving it as 'Excel Workbook (.xlsx)' using compatibility mode.")
             return []
         
-        # Set the environment variable for the metadata file path
+        # Set the metadata filepath environment variable for the form_generator module
         os.environ['METADATA_FILEPATH'] = metadata_file
         
-        # We don't need to initialize option sets here again since it's already done when the file is uploaded
-        # and tracked in session state
+        # Initialize option sets if not already done
+        if not st.session_state.option_sets_initialized:
+            initialize_option_sets(metadata_file)
+            st.session_state.option_sets_initialized = True
+        
+        # Load current configuration to ensure it's used
+        config = load_config()
+        
+        # Update form_generator module's configuration variables with current settings
+        import src.form_generator as fg
+        for key, value in config.get("columns", {}).items():
+            if hasattr(fg, key):
+                setattr(fg, key, value)
         
         generated_forms = []
         
@@ -128,7 +184,125 @@ def generate_forms_from_sheets(metadata_file, selected_sheets):
         st.error(f"An unexpected error occurred: {str(e)}")
         return []
 
+def show_configuration_page():
+    st.title("🔧 Column Mapping Configuration")
+    st.markdown("""
+    ### Customize Excel Column Mappings
+    
+    Modify the column names used by the form generator to match your Excel file structure.
+    """)
+    
+    # Load current configuration
+    config = load_config()
+    column_mappings = config.get("columns", get_default_column_mappings())
+    
+    # Check if we have saved settings in localStorage
+    if 'column_mappings' in st.session_state:
+        column_mappings = st.session_state.column_mappings
+    
+    # Create a form for the configuration
+    with st.form("column_mapping_form"):
+        # Group related fields
+        st.subheader("Basic Question Fields")
+        col1, col2 = st.columns(2)
+        with col1:
+            column_mappings["QUESTION_COLUMN"] = st.text_input("Question Column", column_mappings.get("QUESTION_COLUMN", "Question"))
+            column_mappings["LABEL_COLUMN"] = st.text_input("Label Column", column_mappings.get("LABEL_COLUMN", "Label if different"))
+            column_mappings["QUESTION_ID_COLUMN"] = st.text_input("Question ID Column", column_mappings.get("QUESTION_ID_COLUMN", "Question ID"))
+            column_mappings["EXTERNAL_ID_COLUMN"] = st.text_input("External ID Column", column_mappings.get("EXTERNAL_ID_COLUMN", "External ID"))
+        
+        with col2:
+            column_mappings["DATATYPE_COLUMN"] = st.text_input("Datatype Column", column_mappings.get("DATATYPE_COLUMN", "Datatype"))
+            column_mappings["RENDERING_COLUMN"] = st.text_input("Rendering Column", column_mappings.get("RENDERING_COLUMN", "Rendering"))
+            column_mappings["MANDATORY_COLUMN"] = st.text_input("Mandatory Column", column_mappings.get("MANDATORY_COLUMN", "Mandatory"))
+            column_mappings["TOOLTIP_COLUMN_NAME"] = st.text_input("Tooltip Column", column_mappings.get("TOOLTIP_COLUMN_NAME", "Tooltip"))
+        
+        st.subheader("Form Structure Fields")
+        col1, col2 = st.columns(2)
+        with col1:
+            column_mappings["PAGE_COLUMN"] = st.text_input("Page Column", column_mappings.get("PAGE_COLUMN", "Page"))
+            column_mappings["SECTION_COLUMN"] = st.text_input("Section Column", column_mappings.get("SECTION_COLUMN", "Section"))
+            column_mappings["OPTION_SET_COLUMN"] = st.text_input("Option Set Column", column_mappings.get("OPTION_SET_COLUMN", "OptionSet name"))
+        
+        st.subheader("Validation and Logic Fields")
+        col1, col2 = st.columns(2)
+        with col1:
+            column_mappings["VALIDATION_COLUMN"] = st.text_input("Validation Column", column_mappings.get("VALIDATION_COLUMN", "Validation (format)"))
+            column_mappings["LOWER_LIMIT_COLUMN"] = st.text_input("Lower Limit Column", column_mappings.get("LOWER_LIMIT_COLUMN", "Lower limit"))
+            column_mappings["UPPER_LIMIT_COLUMN"] = st.text_input("Upper Limit Column", column_mappings.get("UPPER_LIMIT_COLUMN", "Upper limit"))
+        
+        with col2:
+            column_mappings["DEFAULT_VALUE_COLUMN"] = st.text_input("Default Value Column", column_mappings.get("DEFAULT_VALUE_COLUMN", "Default value"))
+            column_mappings["CALCULATION_COLUMN"] = st.text_input("Calculation Column", column_mappings.get("CALCULATION_COLUMN", "Calculation"))
+            column_mappings["SKIP_LOGIC_COLUMN"] = st.text_input("Skip Logic Column", column_mappings.get("SKIP_LOGIC_COLUMN", "Skip logic"))
+        
+        st.subheader("Translation Fields")
+        col1, col2 = st.columns(2)
+        with col1:
+            column_mappings["TRANSLATION_SECTION_COLUMN"] = st.text_input("Translation Section Column", column_mappings.get("TRANSLATION_SECTION_COLUMN", "Translation - Section"))
+            column_mappings["TRANSLATION_QUESTION_COLUMN"] = st.text_input("Translation Question Column", column_mappings.get("TRANSLATION_QUESTION_COLUMN", "Translation - Question"))
+        
+        with col2:
+            column_mappings["TRANSLATION_TOOLTIP_COLUMN"] = st.text_input("Translation Tooltip Column", column_mappings.get("TRANSLATION_TOOLTIP_COLUMN", "Translation - Tooltip"))
+            column_mappings["TRANSLATION_ANSWER_COLUMN"] = st.text_input("Translation Answer Column", column_mappings.get("TRANSLATION_ANSWER_COLUMN", "Translation"))
+        
+        # Add buttons for saving and resetting
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            save_button = st.form_submit_button("Save Configuration")
+        
+        with col2:
+            reset_button = st.form_submit_button("Reset to Defaults")
+        
+        with col3:
+            download_button = st.form_submit_button("Download Config")
+    
+    # Handle form submission
+    if save_button:
+        # Save to session state
+        st.session_state.column_mappings = column_mappings
+        
+        # Save to config.json
+        config["columns"] = column_mappings
+        if save_config(config):
+            st.success("Configuration saved successfully!")
+        
+        # Store in localStorage using Streamlit's component
+        st.markdown(
+            """
+            <script>
+            localStorage.setItem('formGeneratorConfig', JSON.stringify(
+                """ + json.dumps(column_mappings) + """
+            ));
+            </script>
+            """,
+            unsafe_allow_html=True
+        )
+    
+    if reset_button:
+        # Reset to defaults
+        default_mappings = get_default_column_mappings()
+        st.session_state.column_mappings = default_mappings
+        config["columns"] = default_mappings
+        if save_config(config):
+            st.success("Configuration reset to defaults!")
+        st.rerun()  # Updated from st.experimental_rerun()
+    
+    if download_button:
+        # Create a downloadable config file
+        config_json = json.dumps({"columns": column_mappings}, indent=4)
+        b64 = base64.b64encode(config_json.encode()).decode()
+        href = f'<a href="data:file/json;base64,{b64}" download="config.json">Download config.json</a>'
+        st.markdown(href, unsafe_allow_html=True)
+
 def main():
+    # Set page config first - this must be the first Streamlit command
+    st.set_page_config(
+        page_title="OpenMRS Form Generator",
+        page_icon="🏥",
+        layout="wide"
+    )
+    
     # Initialize session state for JSON preview toggles and generated forms
     if 'initialized' not in st.session_state:
         st.session_state.initialized = True
@@ -137,13 +311,41 @@ def main():
         st.session_state.selected_sheets = []
         st.session_state.forms_generated = False
         st.session_state.option_sets_initialized = False
+        st.session_state.current_page = "home"
         
-    st.set_page_config(
-        page_title="OpenMRS Form Generator",
-        page_icon="🏥",
-        layout="wide"
-    )
+        # Try to load saved config from localStorage
+        st.markdown(
+            """
+            <script>
+            const savedConfig = localStorage.getItem('formGeneratorConfig');
+            if (savedConfig) {
+                window.parent.postMessage({
+                    type: 'streamlit:setComponentValue',
+                    value: JSON.parse(savedConfig),
+                    key: 'loaded_config'
+                }, '*');
+            }
+            </script>
+            """,
+            unsafe_allow_html=True
+        )
 
+    # Navigation menu
+    st.sidebar.title("Navigation")
+    page = st.sidebar.radio(
+        "Go to",
+        ["Home", "Configuration"],
+        key="navigation"
+    )
+    
+    if page == "Home":
+        st.session_state.current_page = "home"
+        show_home_page()
+    elif page == "Configuration":
+        st.session_state.current_page = "config"
+        show_configuration_page()
+
+def show_home_page():
     st.title("🏥 OpenMRS 3 Form Generator")
     st.markdown("""
     ### Generate OpenMRS 3 Form Schemas from Excel Metadata

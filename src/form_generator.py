@@ -34,6 +34,24 @@ TRANSLATION_ANSWER_COLUMN = config.get('columns', {}).get('TRANSLATION_ANSWER_CO
 # Since tooltip name is different in metadata, extract it form Configuration
 TOOLTIP_COLUMN_NAME = config.get('columns', {}).get('TOOLTIP_COLUMN_NAME')
 
+# Extract column mapping configuration
+QUESTION_COLUMN = config.get('columns', {}).get('QUESTION_COLUMN', 'Question')
+LABEL_COLUMN = config.get('columns', {}).get('LABEL_COLUMN', 'Label if different')
+QUESTION_ID_COLUMN = config.get('columns', {}).get('QUESTION_ID_COLUMN', 'Question ID')
+EXTERNAL_ID_COLUMN = config.get('columns', {}).get('EXTERNAL_ID_COLUMN', 'External ID')
+DATATYPE_COLUMN = config.get('columns', {}).get('DATATYPE_COLUMN', 'Datatype')
+VALIDATION_COLUMN = config.get('columns', {}).get('VALIDATION_COLUMN', 'Validation (format)')
+MANDATORY_COLUMN = config.get('columns', {}).get('MANDATORY_COLUMN', 'Mandatory')
+RENDERING_COLUMN = config.get('columns', {}).get('RENDERING_COLUMN', 'Rendering')
+LOWER_LIMIT_COLUMN = config.get('columns', {}).get('LOWER_LIMIT_COLUMN', 'Lower limit')
+UPPER_LIMIT_COLUMN = config.get('columns', {}).get('UPPER_LIMIT_COLUMN', 'Upper limit')
+DEFAULT_VALUE_COLUMN = config.get('columns', {}).get('DEFAULT_VALUE_COLUMN', 'Default value')
+CALCULATION_COLUMN = config.get('columns', {}).get('CALCULATION_COLUMN', 'Calculation')
+SKIP_LOGIC_COLUMN = config.get('columns', {}).get('SKIP_LOGIC_COLUMN', 'Skip logic')
+PAGE_COLUMN = config.get('columns', {}).get('PAGE_COLUMN', 'Page')
+SECTION_COLUMN = config.get('columns', {}).get('SECTION_COLUMN', 'Section')
+OPTION_SET_COLUMN = config.get('columns', {}).get('OPTION_SET_COLUMN', 'OptionSet name')
+
 # Define option_sets as None initially
 option_sets = None
 
@@ -466,12 +484,12 @@ def generate_question(row, columns, question_translations):
         dict: A question JSON.
     """
 
-    if row.isnull().all() or pd.isnull(row['Question']):
+    if row.isnull().all() or pd.isnull(row[QUESTION_COLUMN]):
         return None  # Skip empty rows or rows with empty 'Question'
 
     # Manage values and default values
-    original_question_label = (row['Label if different'] if 'Label if different' in columns and
-                            pd.notnull(row['Label if different']) else row['Question'])
+    original_question_label = (row[LABEL_COLUMN] if LABEL_COLUMN in columns and
+                            pd.notnull(row[LABEL_COLUMN]) else row[QUESTION_COLUMN])
 
     question_label_translation = (
         row[TRANSLATION_QUESTION_COLUMN].replace('"', '').replace("'", '').replace('\\', '/') if TRANSLATION_QUESTION_COLUMN in columns and
@@ -479,25 +497,25 @@ def generate_question(row, columns, question_translations):
                             )
 
     question_label = manage_label(original_question_label)
-    question_id = (row['Question ID'] if 'Question ID' in columns and
-                        pd.notnull(row['Question ID']) else manage_id(original_question_label))
+    question_id = (row[QUESTION_ID_COLUMN] if QUESTION_ID_COLUMN in columns and
+                        pd.notnull(row[QUESTION_ID_COLUMN]) else manage_id(original_question_label))
 
     original_question_info = (row[TOOLTIP_COLUMN_NAME] if TOOLTIP_COLUMN_NAME in columns and
                             pd.notnull(row[TOOLTIP_COLUMN_NAME]) else None )
     question_info = manage_label(original_question_info)
 
-    question_concept_id = (row['External ID'] if 'External ID' in columns and
-                        pd.notnull(row['External ID']) else question_id)
+    question_concept_id = (row[EXTERNAL_ID_COLUMN] if EXTERNAL_ID_COLUMN in columns and
+                        pd.notnull(row[EXTERNAL_ID_COLUMN]) else question_id)
 
-    question_datatype = (row['Datatype'].lower() if pd.notnull(row['Datatype']) else 'radio')
+    question_datatype = (row[DATATYPE_COLUMN].lower() if pd.notnull(row[DATATYPE_COLUMN]) else 'radio')
 
-    validation_format = (row['Validation (format)'] if 'Validation (format)' in columns and
-                        pd.notnull(row['Validation (format)']) else '')
+    validation_format = (row[VALIDATION_COLUMN] if VALIDATION_COLUMN in columns and
+                        pd.notnull(row[VALIDATION_COLUMN]) else '')
 
-    question_required = (str(row['Mandatory']).lower() == 'true' if 'Mandatory' in columns and
-                        pd.notnull(row['Mandatory']) else False)
+    question_required = (str(row[MANDATORY_COLUMN]).lower() == 'true' if MANDATORY_COLUMN in columns and
+                        pd.notnull(row[MANDATORY_COLUMN]) else False)
 
-    question_rendering_value = (row['Rendering'].lower() if pd.notnull(row['Rendering']) else 'text')
+    question_rendering_value = (row[RENDERING_COLUMN].lower() if pd.notnull(row[RENDERING_COLUMN]) else 'text')
 
     question_rendering = manage_rendering(question_rendering_value)
 
@@ -516,10 +534,10 @@ def generate_question(row, columns, question_translations):
 
     # Add min/max values if rendering is numeric/number
     if question_rendering in ['numeric', 'number']:
-        if 'Lower limit' in columns and pd.notnull(row['Lower limit']):
-            question_options['min'] = row['Lower limit']
-        if 'Upper limit' in columns and pd.notnull(row['Upper limit']):
-            question_options['max'] = row['Upper limit']
+        if LOWER_LIMIT_COLUMN in columns and pd.notnull(row[LOWER_LIMIT_COLUMN]):
+            question_options['min'] = row[LOWER_LIMIT_COLUMN]
+        if UPPER_LIMIT_COLUMN in columns and pd.notnull(row[UPPER_LIMIT_COLUMN]):
+            question_options['max'] = row[UPPER_LIMIT_COLUMN]
 
     if should_render_workspace(question_rendering):
         workspace_button_label = get_workspace_button_label(question_rendering)
@@ -551,8 +569,8 @@ def generate_question(row, columns, question_translations):
     if pd.notnull(question_validators):
         question['validators'] = question_validators
 
-    if 'Default value' in columns and pd.notnull(row['Default value']):
-        question['default'] = row['Default value']
+    if DEFAULT_VALUE_COLUMN in columns and pd.notnull(row[DEFAULT_VALUE_COLUMN]):
+        question['default'] = row[DEFAULT_VALUE_COLUMN]
 
     if TOOLTIP_COLUMN_NAME in columns and pd.notnull(row[TOOLTIP_COLUMN_NAME]):
         question['questionInfo'] = question_info
@@ -565,24 +583,24 @@ def generate_question(row, columns, question_translations):
         )
         add_translation(question_translations, question_info, question_info_translation)
 
-    if 'Calculation' in columns and pd.notnull(row['Calculation']):
-        question['questionOptions']['calculate'] = {"calculateExpression": row['Calculation']}
+    if CALCULATION_COLUMN in columns and pd.notnull(row[CALCULATION_COLUMN]):
+        question['questionOptions']['calculate'] = {"calculateExpression": row[CALCULATION_COLUMN]}
 
-    if 'Skip logic' in columns and pd.notnull(row['Skip logic']):
+    if SKIP_LOGIC_COLUMN in columns and pd.notnull(row[SKIP_LOGIC_COLUMN]):
         question['hide'] = {"hideWhenExpression": build_skip_logic_expression(
-            row['Skip logic'], ALL_QUESTIONS_ANSWERS
+            row[SKIP_LOGIC_COLUMN], ALL_QUESTIONS_ANSWERS
             )}
 
-    if 'OptionSet name' in columns and pd.notnull(row['OptionSet name']):
-        options = get_options(row['OptionSet name'])
+    if OPTION_SET_COLUMN in columns and pd.notnull(row[OPTION_SET_COLUMN]):
+        options = get_options(row[OPTION_SET_COLUMN])
         question['questionOptions']['answers'] = []
 
         for opt in options:
             answer = {
                 "label": manage_label(opt['Answers']),
                 "concept": (manage_id(opt['Answers']) if opt['External ID'] == '#N/A' else
-                    (opt['External ID'] if 'External ID' in columns and
-                        pd.notnull(opt['External ID'])
+                    (opt['External ID'] if EXTERNAL_ID_COLUMN in columns and
+                        pd.notnull(opt[EXTERNAL_ID_COLUMN])
                         else manage_id(opt['Answers'], id_type="answer",
                             question_id=question_id,
                             all_questions_answers=ALL_QUESTIONS_ANSWERS)))
@@ -675,24 +693,24 @@ def generate_form(sheet_name, form_translations, metadata_file=None):
     # concept_ids is defined here, not inside the function
     concept_ids_set = set()
 
-    pages = df['Page'].unique()
+    pages = df[PAGE_COLUMN].unique()
 
     # Keep track of total questions and answers
     count_total_questions = 0
     count_total_answers = 0
 
     for page in pages:
-        page_df = df[df['Page'] == page]
+        page_df = df[df[PAGE_COLUMN] == page]
 
         form_data["pages"].append({
             "label": f"{page}",
             "sections": []
         })
 
-        for section in page_df['Section'].unique():
-            section_df = page_df[page_df['Section'] == section]
+        for section in page_df[SECTION_COLUMN].unique():
+            section_df = page_df[page_df[SECTION_COLUMN] == section]
             section_label = (
-                section_df['Section'].iloc[0] if pd.notnull(section_df['Section'].iloc[0])
+                section_df[SECTION_COLUMN].iloc[0] if pd.notnull(section_df[SECTION_COLUMN].iloc[0])
                             else '')
 
             # Add section label translations to form_translations
@@ -705,7 +723,7 @@ def generate_form(sheet_name, form_translations, metadata_file=None):
 
             questions = [generate_question(row, columns, form_translations)
                         for _, row in section_df.iterrows()
-                        if not row.isnull().all() and pd.notnull(row['Question'])]
+                        if not row.isnull().all() and pd.notnull(row[QUESTION_COLUMN])]
 
             questions = [q for q in questions if q is not None]
 

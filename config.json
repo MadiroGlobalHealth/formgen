@@ -2,8 +2,24 @@
     "columns": {
         "TOOLTIP_COLUMN_NAME": "Tooltip",
         "TRANSLATION_SECTION_COLUMN": "Translation - Section",
-        "TRANSLATION_QUESTION_COLUMN": "Translation - Question", 
+        "TRANSLATION_QUESTION_COLUMN": "Translation - Question",
         "TRANSLATION_TOOLTIP_COLUMN": "Translation - Tooltip",
-        "TRANSLATION_ANSWER_COLUMN": "Translation"
+        "TRANSLATION_ANSWER_COLUMN": "Translation",
+        "QUESTION_COLUMN": "Question",
+        "LABEL_COLUMN": "Label if different",
+        "QUESTION_ID_COLUMN": "Question ID",
+        "EXTERNAL_ID_COLUMN": "External ID",
+        "DATATYPE_COLUMN": "Datatype",
+        "VALIDATION_COLUMN": "Validation (format)",
+        "MANDATORY_COLUMN": "Mandatory",
+        "RENDERING_COLUMN": "Rendering",
+        "LOWER_LIMIT_COLUMN": "Lower limit",
+        "UPPER_LIMIT_COLUMN": "Upper limit",
+        "DEFAULT_VALUE_COLUMN": "Default value",
+        "CALCULATION_COLUMN": "Calculation",
+        "SKIP_LOGIC_COLUMN": "Skip logic",
+        "PAGE_COLUMN": "Page",
+        "SECTION_COLUMN": "Section",
+        "OPTION_SET_COLUMN": "OptionSet name"
     }
 }
