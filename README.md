@@ -68,4 +68,4 @@ The application allows customization of:
 
 Powered by [Madiro Global Health](https://madiro.org)
 
-![Madiro Logo](https://raw.githubusercontent.com/MadiroGlobalHealth/clinical-content-tools/refs/heads/main/.github/workflows/madiro.png)
+<img src="https://raw.githubusercontent.com/MadiroGlobalHealth/clinical-content-tools/refs/heads/main/.github/workflows/madiro.png" alt="Madiro Logo" width="150" />
