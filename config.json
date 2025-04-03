@@ -21,5 +21,8 @@
         "PAGE_COLUMN": "Page",
         "SECTION_COLUMN": "Section",
         "OPTION_SET_COLUMN": "OptionSet name"
+    },
+    "settings": {
+        "SHEET_FILTER_PREFIX": "F\\d{2}"
     }
 }

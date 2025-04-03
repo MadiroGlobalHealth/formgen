@@ -38,16 +38,28 @@ from src.form_generator import (
 def load_config():
     try:
         with open('config.json', 'r', encoding='utf-8') as f:
-            return json.load(f)
+            config = json.load(f)
+            
+            # Ensure settings section exists
+            if "settings" not in config:
+                config["settings"] = get_default_app_settings()
+                
+            return config
     except Exception as e:
         st.error(f"Error loading configuration: {str(e)}")
-        return {"columns": {}}
+        return {
+            "columns": get_default_column_mappings(),
+            "settings": get_default_app_settings()
+        }
 
 # Save configuration to config.json
 def save_config(config):
+    """
+    Save configuration to config.json
+    """
     try:
         with open('config.json', 'w', encoding='utf-8') as f:
-            json.dump(config, f, indent=4)
+            json.dump(config, indent=4, fp=f)
         return True
     except Exception as e:
         st.error(f"Error saving configuration: {str(e)}")
@@ -55,12 +67,10 @@ def save_config(config):
 
 # Function to get default column mappings
 def get_default_column_mappings():
+    """
+    Return the default column mappings
+    """
     return {
-        "TOOLTIP_COLUMN_NAME": "Tooltip",
-        "TRANSLATION_SECTION_COLUMN": "Translation - Section",
-        "TRANSLATION_QUESTION_COLUMN": "Translation - Question", 
-        "TRANSLATION_TOOLTIP_COLUMN": "Translation - Tooltip",
-        "TRANSLATION_ANSWER_COLUMN": "Translation",
         "QUESTION_COLUMN": "Question",
         "LABEL_COLUMN": "Label if different",
         "QUESTION_ID_COLUMN": "Question ID",
@@ -76,7 +86,20 @@ def get_default_column_mappings():
         "SKIP_LOGIC_COLUMN": "Skip logic",
         "PAGE_COLUMN": "Page",
         "SECTION_COLUMN": "Section",
-        "OPTION_SET_COLUMN": "OptionSet name"
+        "OPTION_SET_COLUMN": "OptionSet name",
+        "TOOLTIP_COLUMN_NAME": "Tooltip",
+        "TRANSLATION_SECTION_COLUMN": "Translation - Section",
+        "TRANSLATION_QUESTION_COLUMN": "Translation - Question",
+        "TRANSLATION_TOOLTIP_COLUMN": "Translation - Tooltip",
+        "TRANSLATION_ANSWER_COLUMN": "Translation"
+    }
+
+def get_default_app_settings():
+    """
+    Return the default application settings
+    """
+    return {
+        "SHEET_FILTER_PREFIX": "F\\d{2}"  # Default: "F" followed by 2 digits
     }
 
 def get_download_link(filepath, filename):
@@ -203,69 +226,127 @@ def show_configuration_page():
     # Load current configuration
     config = load_config()
     column_mappings = config.get("columns", get_default_column_mappings())
+    app_settings = config.get("settings", get_default_app_settings())
     
     # Check if we have saved settings in localStorage
     if 'column_mappings' in st.session_state:
         column_mappings = st.session_state.column_mappings
+    if 'app_settings' in st.session_state:
+        app_settings = st.session_state.app_settings
     
-    # Create a form for the configuration
-    with st.form("column_mapping_form"):
-        # Group related fields
-        st.subheader("Basic Question Fields")
-        col1, col2 = st.columns(2)
-        with col1:
-            column_mappings["QUESTION_COLUMN"] = st.text_input("Question Column", column_mappings.get("QUESTION_COLUMN", "Question"))
-            column_mappings["LABEL_COLUMN"] = st.text_input("Label Column", column_mappings.get("LABEL_COLUMN", "Label if different"))
-            column_mappings["QUESTION_ID_COLUMN"] = st.text_input("Question ID Column", column_mappings.get("QUESTION_ID_COLUMN", "Question ID"))
-            column_mappings["EXTERNAL_ID_COLUMN"] = st.text_input("External ID Column", column_mappings.get("EXTERNAL_ID_COLUMN", "External ID"))
-        
-        with col2:
-            column_mappings["DATATYPE_COLUMN"] = st.text_input("Datatype Column", column_mappings.get("DATATYPE_COLUMN", "Datatype"))
-            column_mappings["RENDERING_COLUMN"] = st.text_input("Rendering Column", column_mappings.get("RENDERING_COLUMN", "Rendering"))
-            column_mappings["MANDATORY_COLUMN"] = st.text_input("Mandatory Column", column_mappings.get("MANDATORY_COLUMN", "Mandatory"))
-            column_mappings["TOOLTIP_COLUMN_NAME"] = st.text_input("Tooltip Column", column_mappings.get("TOOLTIP_COLUMN_NAME", "Tooltip"))
-        
-        st.subheader("Form Structure Fields")
-        col1, col2 = st.columns(2)
-        with col1:
-            column_mappings["PAGE_COLUMN"] = st.text_input("Page Column", column_mappings.get("PAGE_COLUMN", "Page"))
-            column_mappings["SECTION_COLUMN"] = st.text_input("Section Column", column_mappings.get("SECTION_COLUMN", "Section"))
-            column_mappings["OPTION_SET_COLUMN"] = st.text_input("Option Set Column", column_mappings.get("OPTION_SET_COLUMN", "OptionSet name"))
-        
-        st.subheader("Validation and Logic Fields")
-        col1, col2 = st.columns(2)
-        with col1:
-            column_mappings["VALIDATION_COLUMN"] = st.text_input("Validation Column", column_mappings.get("VALIDATION_COLUMN", "Validation (format)"))
-            column_mappings["LOWER_LIMIT_COLUMN"] = st.text_input("Lower Limit Column", column_mappings.get("LOWER_LIMIT_COLUMN", "Lower limit"))
-            column_mappings["UPPER_LIMIT_COLUMN"] = st.text_input("Upper Limit Column", column_mappings.get("UPPER_LIMIT_COLUMN", "Upper limit"))
-        
-        with col2:
-            column_mappings["DEFAULT_VALUE_COLUMN"] = st.text_input("Default Value Column", column_mappings.get("DEFAULT_VALUE_COLUMN", "Default value"))
-            column_mappings["CALCULATION_COLUMN"] = st.text_input("Calculation Column", column_mappings.get("CALCULATION_COLUMN", "Calculation"))
-            column_mappings["SKIP_LOGIC_COLUMN"] = st.text_input("Skip Logic Column", column_mappings.get("SKIP_LOGIC_COLUMN", "Skip logic"))
-        
-        st.subheader("Translation Fields")
-        col1, col2 = st.columns(2)
-        with col1:
-            column_mappings["TRANSLATION_SECTION_COLUMN"] = st.text_input("Translation Section Column", column_mappings.get("TRANSLATION_SECTION_COLUMN", "Translation - Section"))
-            column_mappings["TRANSLATION_QUESTION_COLUMN"] = st.text_input("Translation Question Column", column_mappings.get("TRANSLATION_QUESTION_COLUMN", "Translation - Question"))
-        
-        with col2:
-            column_mappings["TRANSLATION_TOOLTIP_COLUMN"] = st.text_input("Translation Tooltip Column", column_mappings.get("TRANSLATION_TOOLTIP_COLUMN", "Translation - Tooltip"))
-            column_mappings["TRANSLATION_ANSWER_COLUMN"] = st.text_input("Translation Answer Column", column_mappings.get("TRANSLATION_ANSWER_COLUMN", "Translation"))
-        
-        # Add buttons for saving and resetting
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            save_button = st.form_submit_button("Save Configuration")
-        
-        with col2:
-            reset_button = st.form_submit_button("Reset to Defaults")
-        
-        with col3:
-            download_button = st.form_submit_button("Download Config")
+    # Add option to upload a config file
+    st.subheader("Import Configuration")
+    uploaded_config = st.file_uploader(
+        "Upload existing config.json file", 
+        type=['json'],
+        help="Upload a previously saved config.json file to restore your settings"
+    )
     
-    # Handle form submission
+    if uploaded_config is not None:
+        try:
+            imported_config = json.load(uploaded_config)
+            if "columns" in imported_config:
+                column_mappings = imported_config["columns"]
+                st.session_state.column_mappings = column_mappings
+            if "settings" in imported_config:
+                app_settings = imported_config["settings"]
+                st.session_state.app_settings = app_settings
+            st.success("Configuration imported successfully!")
+        except Exception as e:
+            st.error(f"Error importing configuration: {str(e)}")
+    
+    # Create tabs for different configuration sections
+    tab1, tab2 = st.tabs(["Column Mappings", "Application Settings"])
+    
+    with tab1:
+        # Create a form for the column configuration
+        with st.form("column_mapping_form"):
+            # Group related fields
+            st.subheader("Basic Question Fields")
+            col1, col2 = st.columns(2)
+            with col1:
+                column_mappings["QUESTION_COLUMN"] = st.text_input("Question Column", column_mappings.get("QUESTION_COLUMN", "Question"))
+                column_mappings["LABEL_COLUMN"] = st.text_input("Label Column", column_mappings.get("LABEL_COLUMN", "Label if different"))
+                column_mappings["QUESTION_ID_COLUMN"] = st.text_input("Question ID Column", column_mappings.get("QUESTION_ID_COLUMN", "Question ID"))
+                column_mappings["EXTERNAL_ID_COLUMN"] = st.text_input("External ID Column", column_mappings.get("EXTERNAL_ID_COLUMN", "External ID"))
+            
+            with col2:
+                column_mappings["DATATYPE_COLUMN"] = st.text_input("Datatype Column", column_mappings.get("DATATYPE_COLUMN", "Datatype"))
+                column_mappings["MANDATORY_COLUMN"] = st.text_input("Mandatory Column", column_mappings.get("MANDATORY_COLUMN", "Mandatory"))
+                column_mappings["RENDERING_COLUMN"] = st.text_input("Rendering Column", column_mappings.get("RENDERING_COLUMN", "Rendering"))
+                column_mappings["TOOLTIP_COLUMN_NAME"] = st.text_input("Tooltip Column", column_mappings.get("TOOLTIP_COLUMN_NAME", "Tooltip"))
+            
+            st.subheader("Layout and Organization")
+            col1, col2 = st.columns(2)
+            with col1:
+                column_mappings["PAGE_COLUMN"] = st.text_input("Page Column", column_mappings.get("PAGE_COLUMN", "Page"))
+                column_mappings["SECTION_COLUMN"] = st.text_input("Section Column", column_mappings.get("SECTION_COLUMN", "Section"))
+                column_mappings["OPTION_SET_COLUMN"] = st.text_input("Option Set Column", column_mappings.get("OPTION_SET_COLUMN", "OptionSet name"))
+            
+            st.subheader("Validation and Calculation")
+            col1, col2 = st.columns(2)
+            with col1:
+                column_mappings["VALIDATION_COLUMN"] = st.text_input("Validation Column", column_mappings.get("VALIDATION_COLUMN", "Validation (format)"))
+                column_mappings["LOWER_LIMIT_COLUMN"] = st.text_input("Lower Limit Column", column_mappings.get("LOWER_LIMIT_COLUMN", "Lower limit"))
+                column_mappings["UPPER_LIMIT_COLUMN"] = st.text_input("Upper Limit Column", column_mappings.get("UPPER_LIMIT_COLUMN", "Upper limit"))
+            
+            with col2:
+                column_mappings["DEFAULT_VALUE_COLUMN"] = st.text_input("Default Value Column", column_mappings.get("DEFAULT_VALUE_COLUMN", "Default value"))
+                column_mappings["CALCULATION_COLUMN"] = st.text_input("Calculation Column", column_mappings.get("CALCULATION_COLUMN", "Calculation"))
+                column_mappings["SKIP_LOGIC_COLUMN"] = st.text_input("Skip Logic Column", column_mappings.get("SKIP_LOGIC_COLUMN", "Skip logic"))
+            
+            st.subheader("Translation Fields")
+            col1, col2 = st.columns(2)
+            with col1:
+                column_mappings["TRANSLATION_SECTION_COLUMN"] = st.text_input("Translation Section Column", column_mappings.get("TRANSLATION_SECTION_COLUMN", "Translation - Section"))
+                column_mappings["TRANSLATION_QUESTION_COLUMN"] = st.text_input("Translation Question Column", column_mappings.get("TRANSLATION_QUESTION_COLUMN", "Translation - Question"))
+            
+            with col2:
+                column_mappings["TRANSLATION_TOOLTIP_COLUMN"] = st.text_input("Translation Tooltip Column", column_mappings.get("TRANSLATION_TOOLTIP_COLUMN", "Translation - Tooltip"))
+                column_mappings["TRANSLATION_ANSWER_COLUMN"] = st.text_input("Translation Answer Column", column_mappings.get("TRANSLATION_ANSWER_COLUMN", "Translation"))
+            
+            # Add buttons for saving and resetting
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                save_button = st.form_submit_button("Save Configuration")
+            
+            with col2:
+                reset_button = st.form_submit_button("Reset to Defaults")
+            
+            with col3:
+                download_button = st.form_submit_button("Download Config")
+    
+    with tab2:
+        # Create a form for application settings
+        with st.form("app_settings_form"):
+            st.subheader("Sheet Filter Settings")
+            
+            # Add help text explaining the regex
+            st.markdown("""
+            The sheet filter prefix is used to identify form sheets in your Excel file. 
+            By default, it looks for sheets starting with "F" followed by 2 digits (e.g., F01, F02).
+            
+            You can customize this using regular expressions:
+            - `F\\d{2}` matches F followed by exactly 2 digits (F01, F02, etc.)
+            - `F\\d+` matches F followed by any number of digits (F1, F01, F123, etc.)
+            - `Form\\d+` matches "Form" followed by digits (Form1, Form2, etc.)
+            """)
+            
+            app_settings["SHEET_FILTER_PREFIX"] = st.text_input(
+                "Sheet Filter Prefix (regex)", 
+                app_settings.get("SHEET_FILTER_PREFIX", "F\\d{2}"),
+                help="Regular expression pattern to identify form sheets in your Excel file"
+            )
+            
+            # Add buttons for saving and resetting
+            col1, col2 = st.columns(2)
+            with col1:
+                save_settings_button = st.form_submit_button("Save Settings")
+            
+            with col2:
+                reset_settings_button = st.form_submit_button("Reset Settings to Defaults")
+    
+    # Handle column mapping form submission
     if save_button:
         # Save to session state
         st.session_state.column_mappings = column_mappings
@@ -294,14 +375,33 @@ def show_configuration_page():
         config["columns"] = default_mappings
         if save_config(config):
             st.success("Configuration reset to defaults!")
-        st.rerun()  # Updated from st.experimental_rerun()
+        st.rerun()
     
     if download_button:
         # Create a downloadable config file
-        config_json = json.dumps({"columns": column_mappings}, indent=4)
+        config_json = json.dumps({"columns": column_mappings, "settings": app_settings}, indent=4)
         b64 = base64.b64encode(config_json.encode()).decode()
         href = f'<a href="data:file/json;base64,{b64}" download="config.json">Download config.json</a>'
         st.markdown(href, unsafe_allow_html=True)
+    
+    # Handle application settings form submission
+    if save_settings_button:
+        # Save to session state
+        st.session_state.app_settings = app_settings
+        
+        # Save to config.json
+        config["settings"] = app_settings
+        if save_config(config):
+            st.success("Settings saved successfully!")
+    
+    if reset_settings_button:
+        # Reset to defaults
+        default_settings = get_default_app_settings()
+        st.session_state.app_settings = default_settings
+        config["settings"] = default_settings
+        if save_config(config):
+            st.success("Settings reset to defaults!")
+        st.rerun()
 
 def main():
     # Set page config first - this must be the first Streamlit command
@@ -454,13 +554,26 @@ def show_home_page():
         # Update environment variable for metadata file path
         os.environ['METADATA_FILEPATH'] = temp_file_path
         
-        # Extract sheet names and filter for sheets starting with "F" followed by 2 digits
+        # Extract sheet names and filter based on the configured sheet filter prefix
         wb = openpyxl.load_workbook(temp_file_path, read_only=True)
         all_sheet_names = wb.sheetnames
-        
-        # Filter sheets that start with "F" followed by 2 digits
-        form_sheet_names = [sheet for sheet in all_sheet_names if re.match(r'^F\d{2}', sheet)]
-        
+
+        # Get the configured sheet filter prefix from settings
+        config = load_config()
+        sheet_filter_prefix = config.get("settings", {}).get("SHEET_FILTER_PREFIX", "F\\d{2}")
+
+        # If filter prefix is empty, show all sheets without filtering
+        if not sheet_filter_prefix or sheet_filter_prefix.strip() == "":
+            form_sheet_names = all_sheet_names
+        else:
+            # Filter sheets based on the configured prefix
+            form_sheet_names = [sheet for sheet in all_sheet_names if re.match(f'^{sheet_filter_prefix}', sheet)]
+            
+            # If no sheets match the filter, show all sheets
+            if not form_sheet_names:
+                form_sheet_names = all_sheet_names
+                st.info("No sheets matched the configured filter. Showing all sheets.")
+
         # Sheet selection with checkboxes
         st.subheader("Select Sheets to Generate Forms")
         
