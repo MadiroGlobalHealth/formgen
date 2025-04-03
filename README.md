@@ -2,6 +2,8 @@
 
 A small app that generates OpenMRS 3 form schemas from Excel metadata files.
 
+Use online: [formgen.streamlit.app](https://formgen.streamlit.app)
+
 ## Overview
 
 The OpenMRS 3 Form Generator simplifies the process of creating form schemas for OpenMRS 3 by allowing users to define form structure and content in Excel spreadsheets. The application converts these spreadsheets into the required JSON schema format for OpenMRS 3 forms.
