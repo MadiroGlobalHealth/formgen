@@ -17,6 +17,24 @@ The OpenMRS 3 Form Generator simplifies the process of creating form schemas for
 - **Translation Support**: Generate translation files for multilingual forms
 - **Batch Processing**: Generate multiple forms at once
 
+## Form Content Translation Coverage
+
+The application supports generating forms in multiple languages. Below is the current translation coverage:
+
+| Form Element | English Coverage | Arabic Coverage | Methodology |
+|--------------|------------------|-----------------|-------------|
+| Page name | Yes | Yes | Using translation JSON files, label in form used as translation keys |
+| Section name | Yes | Yes | Using translation JSON files, label in form used as translation keys |
+| Question label | Yes | Yes | Using translation JSON files, label in form used as translation keys |
+| Tooltip | Yes | No | Translations not supported at the moment |
+| Rendering type | Yes | N/A | Rendering type defined in metadata directly |
+| Default value | Yes | ? | Verify if translations are supported |
+| Calculation | Manual | Manual | Expression could be added manually in metadata – TBC |
+| Skip – filtering logic | Manual | Manual | Expression could be added manually in metadata – TBC |
+| Answer's labels | Yes | Yes | Using translation JSON files, label in form used as translation keys |
+| Order of questions | No | N/A | Rendering type defined in metadata directly |
+
+
 ## Getting Started
 
 ### Running the Application
@@ -71,3 +89,4 @@ The application allows customization of:
 Powered by [Madiro Global Health](https://madiro.org)
 
 <img src="https://raw.githubusercontent.com/MadiroGlobalHealth/clinical-content-tools/refs/heads/main/.github/workflows/madiro.png" alt="Madiro Logo" width="150" />
+
