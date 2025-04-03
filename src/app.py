@@ -374,7 +374,7 @@ def main():
     # Add "Powered by" text and Madiro logo at the bottom of the sidebar
     st.sidebar.markdown("<p style='color: #888; font-size: 0.8em;'>Powered by</p>", unsafe_allow_html=True)
     st.sidebar.image(
-        "https://uc8ab7bcc5f25d935b07d8f4b425.previews.dropboxusercontent.com/p/thumb/ACmC2HTzRrV2Qo19LyzxNpAtrMu6bOUU0frPZXioZ3eIPZ03sgTqZyWxyRLOVocHk6nnYK4dNbyuW-B8z7HXJ0NwRz8O_5Ouw9Hdp5lNZxm8lbjQgufCK16MA_A4sOPJhun1pmH1vd3Mj-0rbPYWuqHUr8hgU_1ng6I27UjxFoJmxaerYxgndMeJuKcgr5I5C9uBzSAzCLkPR9aPfBontkXLpTn1TFtnEHJNXuWuQHhhwRWDjiO7sGkgmvSOMyrcHPhVYprnn_0eh8DwHU9rLqs0bDsvC-eb2klDBSektZ3pcR_1ULB07gk9dquOdkQ_3RQ5VqiSWWzVUzjHTa7-az-HWSWT5d_0c9rxfZ4H97dtYfw5OZvT_M-0uIs79YkFdyY/p.png?is_prewarmed=true",
+        "https://raw.githubusercontent.com/MadiroGlobalHealth/clinical-content-tools/refs/heads/main/.github/workflows/madiro.png",
         width=100
     )
     
@@ -397,7 +397,7 @@ def show_home_page():
     st.markdown("""
     ### Generate OpenMRS 3 Form Schemas from Excel Metadata
     
-    Upload an Excel file containing form metadata and generate JSON schemas for OpenMRS 3.
+    Verify the mappings with the column names in your Excel file in the Configuration page, then upload an Excel file containing form metadata to generate JSON schemas.
     """)
 
     # File uploader
