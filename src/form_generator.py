@@ -395,39 +395,89 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
     Build a skip logic expression from an expression string.
 
     Args:
-        expression (str): An expression string.
+        expression (str): An expression string. Can include multiple conditions in set notation.
+            Example: "Hide question if [BCG] !== {'Unknown', 'Not vaccinated'}"
 
     Returns:
         str: A skip logic expression.
     """
-    # Regex pattern to match the required parts
-    pattern = r"\[([^\]]+)\]\s*(<>|!==|==)\s*'([^']*)'"
+    # Regex pattern to match single value condition
+    single_value_pattern = r"\[([^\]]+)\]\s*(<>|!==|==)\s*'([^']*)'"
+
+    # Regex pattern to match multiple values in set notation
+    # Example: [BCG] !== {'Unknown', 'Not vaccinated'}
+    multi_value_pattern = r"\[([^\]]+)\]\s*(<>|!==|==)\s*\{(.+?)\}"
+
     uuid_pattern = r'[a-fA-F0-9]{8}-' \
                 '[a-fA-F0-9]{4}-' \
                 '[a-fA-F0-9]{4}-' \
                 '[a-fA-F0-9]{4}-' \
                 '[a-fA-F0-9]{12}|' \
                 '[a-fA-F0-9]{32}'
-    match = re.search(pattern, expression)
 
-    if match:
-        original_question_label, operator, original_cond_answer = match.groups()
+    # First try to match the multi-value pattern
+    multi_match = re.search(multi_value_pattern, expression)
+    if multi_match:
+        original_question_label, operator, values_str = multi_match.groups()
+
+        # Normalize operator
         if operator == '<>':
             operator = '!=='
-        elif operator != '!==':
-            return 'Only conditional operator "different than" noted !== is supported'
-        # Check if original_question_label is a 36 character UUID
+        elif operator != '!==' and operator != '==':
+            return 'Only conditional operators "different than" (!==/&lt;&gt;) and "equals" (==) are supported'
+
+        # Get question ID
         if re.match(uuid_pattern, original_question_label):
             question_id = original_question_label
         else:
             question_id = find_question_concept_by_label(questions_answers, original_question_label)
-        # Check if original_cond_answer is a 36 character UUID
+
+        # Parse the values from the set notation
+        # Split by comma and remove quotes and whitespace
+        values = [v.strip().strip('\'"') for v in values_str.split(',')]
+
+        # Build conditions for each value
+        conditions = []
+        for value in values:
+            # Check if value is a UUID
+            if re.match(uuid_pattern, value):
+                cond_answer = value
+            else:
+                cond_answer = find_answer_concept_by_label(
+                    questions_answers, original_question_label, value
+                )
+            conditions.append(f"{question_id} {operator} '{cond_answer}'")
+
+        # Join conditions with logical OR if operator is !== (different than)
+        # or with logical AND if operator is == (equals)
+        logical_operator = ' || ' if operator == '!==' else ' && '
+        return '(' + logical_operator.join(conditions) + ')'
+
+    # If not a multi-value pattern, try the single value pattern
+    single_match = re.search(single_value_pattern, expression)
+    if single_match:
+        original_question_label, operator, original_cond_answer = single_match.groups()
+
+        # Normalize operator
+        if operator == '<>':
+            operator = '!=='
+        elif operator != '!==' and operator != '==':
+            return 'Only conditional operators "different than" (!==/&lt;&gt;) and "equals" (==) are supported'
+
+        # Get question ID
+        if re.match(uuid_pattern, original_question_label):
+            question_id = original_question_label
+        else:
+            question_id = find_question_concept_by_label(questions_answers, original_question_label)
+
+        # Get answer concept
         if re.match(uuid_pattern, original_cond_answer):
             cond_answer = original_cond_answer
         else:
             cond_answer = find_answer_concept_by_label(
                 questions_answers, original_question_label, original_cond_answer
-                )
+            )
+
         return f"{question_id} {operator} '{cond_answer}'"
 
     return "Invalid expression format"
