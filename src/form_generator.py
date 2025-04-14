@@ -69,13 +69,13 @@ def read_excel_skip_strikeout(filepath, sheet_name=0, header_row=1):
     :return: Pandas DataFrame with rows containing strikethrough removed
     """
     print(f"Reading sheet '{sheet_name}' from file: '{filepath}'")
-    
+
     if not filepath or filepath.strip() == '':
         raise ValueError("Empty file path provided. Please check your METADATA_FILEPATH environment variable.")
-        
+
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"Excel file not found: '{filepath}'")
-        
+
     try:
         # Load workbook (use data_only=True if you only need computed values)
         wb = openpyxl.load_workbook(filepath, data_only=True)
@@ -145,18 +145,18 @@ def read_excel_skip_strikeout(filepath, sheet_name=0, header_row=1):
 def initialize_option_sets(metadata_file=None):
     """
     Initialize option_sets from the metadata file
-    
+
     Args:
         metadata_file (str, optional): Path to the metadata file. If None, uses the global METADATA_FILE.
     """
     global option_sets
-    
+
     # Use the provided metadata_file if available, otherwise use the global METADATA_FILE
     file_to_use = metadata_file if metadata_file else METADATA_FILE
-    
+
     if not file_to_use or not os.path.exists(file_to_use):
         raise FileNotFoundError(f"Metadata file not found: '{file_to_use}'")
-        
+
     try:
         option_sets = read_excel_skip_strikeout(filepath=file_to_use, sheet_name='OptionSets', header_row=2)
     except Exception as e:
@@ -186,26 +186,32 @@ def get_options(option_set_name):
         option_set_name (str): The name of the option set.
 
     Returns:
-        list: A list of dictionaries containing option set details.
+        tuple: A tuple containing (options_list, found_flag) where:
+            - options_list is a list of dictionaries containing option set details
+            - found_flag is a boolean indicating if the option set was found
     """
     if option_sets is None:
         raise ValueError("Option sets not initialized. Call initialize_option_sets first.")
-    return option_sets[option_sets['OptionSet name'] == option_set_name].to_dict(orient='records')
+
+    filtered_options = option_sets[option_sets['OptionSet name'] == option_set_name]
+    options_found = len(filtered_options) > 0
+
+    return filtered_options.to_dict(orient='records'), options_found
 
 def find_question_concept_by_label(questions_answers, question_label):
     """
     Find question concept by label.
-    
+
     Args:
         questions_answers (list): List of question answer dictionaries
         question_label (str): The label to search for
-        
+
     Returns:
         str: The question ID if found, otherwise a generated ID
     """
     if not questions_answers:
         return manage_id(question_label)
-        
+
     for question in questions_answers:
         if question.get('question_id') == manage_id(question_label):
             return question.get('question_id')
@@ -214,18 +220,18 @@ def find_question_concept_by_label(questions_answers, question_label):
 def find_answer_concept_by_label(questions_answers, question_id, answer_label):
     """
     Find answer concept by label.
-    
+
     Args:
         questions_answers (list): List of question answer dictionaries
         question_id (str): The question ID to search for
         answer_label (str): The answer label to search for
-        
+
     Returns:
         str: The answer concept if found, otherwise a generated ID
     """
     if not questions_answers:
         return manage_id(answer_label)
-        
+
     for question in questions_answers:
         if question.get('question_id') == manage_id(question_id):
             for answer in question.get('questionOptions', {}).get('answers', []):
@@ -472,13 +478,15 @@ def add_translation(translations, label, translated_string):
             return
     translations[label] = translated_string
 
-def generate_question(row, columns, question_translations):
+def generate_question(row, columns, question_translations, missing_option_sets=None):
     """
     Generate a question JSON from a row of the OptionSets sheet.
 
     Args:
         row (pandas.Series): A row of the OptionSets sheet.
         columns (list): A list of column names in the OptionSets sheet.
+        question_translations (dict): Dictionary to store translations.
+        missing_option_sets (list, optional): List to track missing optionSets.
 
     Returns:
         dict: A question JSON.
@@ -575,7 +583,7 @@ def generate_question(row, columns, question_translations):
     if TOOLTIP_COLUMN_NAME in columns and pd.notnull(row[TOOLTIP_COLUMN_NAME]):
         question['questionInfo'] = question_info
         question_info_translation = (
-            row[TRANSLATION_TOOLTIP_COLUMN].replace('"', '').replace("'", '').replace('\\', '/') 
+            row[TRANSLATION_TOOLTIP_COLUMN].replace('"', '').replace("'", '').replace('\\', '/')
                 if (
                     TRANSLATION_TOOLTIP_COLUMN in columns and
                     pd.notnull(row[TRANSLATION_TOOLTIP_COLUMN])
@@ -592,27 +600,53 @@ def generate_question(row, columns, question_translations):
             )}
 
     if OPTION_SET_COLUMN in columns and pd.notnull(row[OPTION_SET_COLUMN]):
-        options = get_options(row[OPTION_SET_COLUMN])
+        option_set_name = row[OPTION_SET_COLUMN]
+        options, option_set_found = get_options(option_set_name)
         question['questionOptions']['answers'] = []
 
-        for opt in options:
-            answer = {
-                "label": manage_label(opt['Answers']),
-                "concept": (manage_id(opt['Answers']) if opt['External ID'] == '#N/A' else
-                    (opt['External ID'] if EXTERNAL_ID_COLUMN in columns and
-                        pd.notnull(opt[EXTERNAL_ID_COLUMN])
-                        else manage_id(opt['Answers'], id_type="answer",
-                            question_id=question_id,
-                            all_questions_answers=ALL_QUESTIONS_ANSWERS)))
-            }
-            question['questionOptions']['answers'].append(answer)
-            # Manage Answer labels
-            answer_label = manage_label(opt['Answers'])
-            translated_answer_label = (row[TRANSLATION_ANSWER_COLUMN] if TRANSLATION_ANSWER_COLUMN in columns and
-                            pd.notnull(row[TRANSLATION_ANSWER_COLUMN]) else None )
-            add_translation(question_translations, answer_label, translated_answer_label)
-            
+        # Flag if optionSet is not found
+        if not option_set_found:
+            question['optionSetNotFound'] = True
+            question['optionSetName'] = option_set_name
+            print(f"Warning: OptionSet '{option_set_name}' not found for question '{question_label}'")
 
+            # Add to missing_option_sets list if provided
+            if missing_option_sets is not None:
+                missing_option_sets.append({
+                    "question_id": question_id,
+                    "question_label": question_label,
+                    "optionSet_name": option_set_name
+                })
+
+            # Add a placeholder answer when optionSet is not found
+            # This allows the form to be generated even with missing optionSets
+            placeholder_answer = {
+                "label": f"[Missing OptionSet: {option_set_name}]",
+                "concept": f"missing_optionset_{manage_id(option_set_name)}"
+            }
+            question['questionOptions']['answers'].append(placeholder_answer)
+
+            # Add a note in the question to make it clear this is a placeholder
+            question['questionOptions']['placeholder'] = True
+
+        # Only process options if the optionSet was found
+        if option_set_found:
+            for opt in options:
+                answer = {
+                    "label": manage_label(opt['Answers']),
+                    "concept": (manage_id(opt['Answers']) if opt['External ID'] == '#N/A' else
+                        (opt['External ID'] if EXTERNAL_ID_COLUMN in columns and
+                            pd.notnull(opt[EXTERNAL_ID_COLUMN])
+                            else manage_id(opt['Answers'], id_type="answer",
+                                question_id=question_id,
+                                all_questions_answers=ALL_QUESTIONS_ANSWERS)))
+                }
+                question['questionOptions']['answers'].append(answer)
+                # Manage Answer labels
+                answer_label = manage_label(opt['Answers'])
+                translated_answer_label = (row[TRANSLATION_ANSWER_COLUMN] if TRANSLATION_ANSWER_COLUMN in columns and
+                                pd.notnull(row[TRANSLATION_ANSWER_COLUMN]) else None )
+                add_translation(question_translations, answer_label, translated_answer_label)
 
         ALL_QUESTIONS_ANSWERS.append({
             "question_id": question['id'],
@@ -642,12 +676,16 @@ def generate_form(sheet_name, form_translations, metadata_file=None):
         metadata_file (str, optional): Path to the metadata file. If None, uses the global METADATA_FILE.
 
     Returns:
-        dict: A form JSON.
+        tuple: A tuple containing (form_data, concept_ids_set, count_total_questions, count_total_answers, missing_option_sets)
+            where missing_option_sets is a list of dictionaries with information about missing optionSets.
     """
     # Reset the global ALL_QUESTIONS_ANSWERS list
     global ALL_QUESTIONS_ANSWERS
     ALL_QUESTIONS_ANSWERS = []
-    
+
+    # Track missing optionSets
+    missing_option_sets = []
+
     form_data = {
         "name": sheet_name,
         "description": "MSF Form - "+sheet_name,
@@ -663,7 +701,7 @@ def generate_form(sheet_name, form_translations, metadata_file=None):
 
     # Use the provided metadata_file if available, otherwise use the global METADATA_FILE
     file_to_use = metadata_file if metadata_file else METADATA_FILE
-    
+
     if not file_to_use or not os.path.exists(file_to_use):
         raise FileNotFoundError(f"Metadata file not found: '{file_to_use}'")
 
@@ -721,7 +759,7 @@ def generate_form(sheet_name, form_translations, metadata_file=None):
             )
             form_translations[section_label] = section_label_translation
 
-            questions = [generate_question(row, columns, form_translations)
+            questions = [generate_question(row, columns, form_translations, missing_option_sets)
                         for _, row in section_df.iterrows()
                         if not row.isnull().all() and pd.notnull(row[QUESTION_COLUMN])]
 
@@ -739,7 +777,7 @@ def generate_form(sheet_name, form_translations, metadata_file=None):
                 "questions": questions
             })
 
-    return form_data, concept_ids_set, count_total_questions, count_total_answers
+    return form_data, concept_ids_set, count_total_questions, count_total_answers, missing_option_sets
 
 def generate_translation_file(form_name, language, translations_list):
     """
