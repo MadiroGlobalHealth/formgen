@@ -293,10 +293,14 @@ def manage_label(original_label):
     Returns:
         str: The cleaned label.
     """
+    # Convert to string to handle integers and other types
+    if original_label is None:
+        return ""
+
     # Format the label
     # label = format_label(original_label)
 
-    return original_label
+    return str(original_label)
 
 # Manage IDs
 def manage_id(original_id, id_type="question", question_id="None", all_questions_answers=None):
@@ -315,6 +319,14 @@ def manage_id(original_id, id_type="question", question_id="None", all_questions
     """
     if all_questions_answers is None:
         all_questions_answers = []
+
+    # Handle None or empty values
+    if original_id is None:
+        return str(uuid.uuid4())
+
+    # Convert to string to handle integers and other types
+    original_id = str(original_id)
+
     cleaned_id = remove_prefixes(original_id)
     cleaned_id = re.sub(r'\s*\(.*?\)', '', cleaned_id)
     # Replace "/" with "Or"
@@ -339,7 +351,15 @@ def manage_id(original_id, id_type="question", question_id="None", all_questions
     cleaned_id = re.sub(r'^_+|_+$', '', cleaned_id)
     # Replace multiple underscores with a single underscore
     cleaned_id = re.sub(r'_+', '_', cleaned_id)
-    cleaned_id = cleaned_id[0].lower() + cleaned_id[1:]
+
+    # Handle empty string after cleaning
+    if not cleaned_id:
+        cleaned_id = f"id_{str(uuid.uuid4()).replace('-', '')[:8]}"
+
+    # Ensure first character is lowercase (only if string is not empty)
+    if len(cleaned_id) > 0:
+        cleaned_id = cleaned_id[0].lower() + cleaned_id[1:]
+
     if id_type == "answer" and cleaned_id == 'other':
         cleaned_id = str(question_id)+str(cleaned_id.capitalize())
     if all_questions_answers is not None:
@@ -355,16 +375,28 @@ def remove_prefixes(text):
     Remove numerical prefixes from the beginning of the string.
     Examples of prefixes: "1. ", "1.1 ", "1.1.1 ", etc.
 
+    Note: Pure integers (like "1", "2", "3") are preserved as they are likely
+    intended as actual answer values, not prefixes.
+
     Parameters:
     text (str): The input string from which to remove prefixes.
 
     Returns:
     str: The string with the prefixes removed.
     """
+    if text is None:
+        return ""
+
+    # Convert text to string before processing
+    text = str(text)
+
     if not detect_range_prefixes(text):
-        # Convert text to string before using re.sub
-        text = str(text)
-        # Use re.sub to remove the matched prefix
+        # Check if the text is just a pure integer (no spaces or other characters)
+        if re.match(r'^\d+$', text):
+            # Keep pure integers as they are likely answer values, not prefixes
+            return text
+
+        # Use re.sub to remove the matched prefix for other cases
         text = re.sub(r'^\d+(\.\d+)*\s*', '', text)
     return text
 
@@ -380,10 +412,17 @@ def camel_case(text):
     """
     Camel case a string.
     """
+    # Convert to string to handle integers and other types
+    if text is None:
+        return str(uuid.uuid4())
+
+    text = str(text)
     words = text.split()
+
     # If text is empty, return UUID
     if not words or text == '%':
         return str(uuid.uuid4())
+
     # Convert the first word to lowercase and capitalize the rest of the words
     camel_case_text = words[0].lower()
     for word in words[1:]:
