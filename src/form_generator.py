@@ -180,14 +180,14 @@ def initialize_option_sets(metadata_file=None):
 # Function to fetch options for a given option set
 def get_options(option_set_name):
     """
-    Fetch options for a given option set name.
+    Fetch options for a given option set name, sorted by the "#" column.
 
     Args:
         option_set_name (str): The name of the option set.
 
     Returns:
         tuple: A tuple containing (options_list, found_flag) where:
-            - options_list is a list of dictionaries containing option set details
+            - options_list is a list of dictionaries containing option set details, sorted by "#" column
             - found_flag is a boolean indicating if the option set was found
     """
     if option_sets is None:
@@ -195,6 +195,10 @@ def get_options(option_set_name):
 
     filtered_options = option_sets[option_sets['OptionSet name'] == option_set_name]
     options_found = len(filtered_options) > 0
+
+    if options_found and '#' in filtered_options.columns:
+        # Sort by the "#" column if it exists
+        filtered_options = filtered_options.sort_values(by='#')
 
     return filtered_options.to_dict(orient='records'), options_found
 
