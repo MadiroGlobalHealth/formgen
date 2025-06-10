@@ -661,8 +661,11 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
     if question_rendering_value == 'inlinemulticheckbox':
         question['inlineMultiCheckbox'] = True
 
+    # Handle decimal numbers based on rendering type
     if question_rendering_value == 'decimalnumber':
         question['disallowDecimals'] = False
+    elif question_rendering_value == 'number':
+        question['disallowDecimals'] = True
 
     add_translation(question_translations, question_label, question_label_translation)
 
