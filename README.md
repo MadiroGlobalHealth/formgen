@@ -1,92 +1,170 @@
-# OpenMRS 3 Form Generator
+# OpenMRS Form Generator
 
-A small app that generates OpenMRS 3 form schemas from Excel metadata files.
-
-Use online: [formgen.streamlit.app](https://formgen.streamlit.app)
-
-## Overview
-
-The OpenMRS 3 Form Generator simplifies the process of creating form schemas for OpenMRS 3 by allowing users to define form structure and content in Excel spreadsheets. The application converts these spreadsheets into the required JSON schema format for OpenMRS 3 forms.
+A Python-based tool to generate OpenMRS 3.x form schemas from Excel metadata files.
 
 ## Features
 
-- **Excel-based Form Definition**: Define forms using familiar Excel spreadsheets
-- **Configurable Column Mappings**: Customize column names to match your Excel structure
-- **Sheet Filtering**: Filter which Excel sheets to process using configurable regex patterns
-- **Form Preview**: Preview generated JSON schemas before downloading
-- **Translation Support**: Generate translation files for multilingual forms
-- **Batch Processing**: Generate multiple forms at once
+### 1. Question ID Generation
+- Supports various ID formats:
+  - Numbered prefixes: `"1 - type"` → `"1type"`
+  - Regular prefixes: `"1. Question"` → `"question"`
+  - Maintains uniqueness by appending numbers for duplicates
+- IDs are compatible with custom expressions and skip logic
 
-## Form Content Translation Coverage
+### 2. Skip Logic Support
+- Multiple condition formats:
+  ```
+  # Comma-separated values
+  Hide question if [Number of fetuses] !== '1', '2', '3', '4'
+  
+  # Set notation
+  Hide question if [BCG] !== {'Unknown', 'Not vaccinated'}
+  
+  # Single value
+  Hide question if [Question] !== 'Value'
+  ```
+- Generates proper logical expressions with OR/AND operators
+- Maintains compatibility with generated question IDs
 
-The application supports generating forms in multiple languages. Below is the current translation coverage:
+### 3. Option Set Handling
+- Respects order defined in "#" column of OptionSets tab
+- Maintains order in generated JSON schema
+- Supports external IDs and translations
 
-| Form Element | English Coverage | Arabic Coverage | Methodology |
-|--------------|------------------|-----------------|-------------|
-| Page name | Yes | Yes | Using translation JSON files, label in form used as translation keys |
-| Section name | Yes | Yes | Using translation JSON files, label in form used as translation keys |
-| Question label | Yes | Yes | Using translation JSON files, label in form used as translation keys |
-| Tooltip | Yes | No | Translations not supported at the moment |
-| Rendering type | Yes | N/A | Rendering type defined in metadata directly |
-| Default value | Yes | ? | Verify if translations are supported |
-| Calculation | Manual | Manual | Expression could be added manually in metadata – TBC |
-| Skip – filtering logic | Manual | Manual | Expression could be added manually in metadata – TBC |
-| Answer's labels | Yes | Yes | Using translation JSON files, label in form used as translation keys |
-| Order of questions | No | N/A | Rendering type defined in metadata directly |
+### 4. Data Type Support
+- Decimal number handling:
+  - `decimalnumber` rendering: allows decimals (`"disallowDecimals": false`)
+  - `number` rendering: disallows decimals (`"disallowDecimals": true`)
+- Various rendering types:
+  - radio
+  - multiCheckbox
+  - inlineMultiCheckbox
+  - boolean
+  - numeric
+  - text
+  - textarea
+  - markdown
+  - workspace-launcher
 
+### 5. Translation Support
+- Generates translation files for form labels
+- Supports section, question, tooltip, and answer translations
+- Maintains alphabetical order in translation files
 
-## Getting Started
+## Excel Metadata Format
 
-### Running the Application
+### Required Sheets
+1. Form sheets (e.g., F01, F02, etc.)
+   - Contains form structure and questions
+   - Columns:
+     - Question
+     - Label if different
+     - Question ID
+     - External ID
+     - Datatype
+     - Rendering
+     - OptionSet name
+     - Page
+     - Section
+     - Skip logic
+     - Translation columns
 
-1. Clone this repository
-2. Install dependencies:
+2. OptionSets sheet
+   - Contains answer options for questions
+   - Columns:
+     - "#" (for ordering)
+     - OptionSet name
+     - Answers
+     - External ID
+
+## Generated Output
+
+### Form Schema
+```json
+{
+  "name": "Form Name",
+  "pages": [{
+    "label": "Page Name",
+    "sections": [{
+      "label": "Section Name",
+      "questions": [{
+        "id": "questionId",
+        "label": "Question Label",
+        "questionOptions": {
+          "rendering": "radio",
+          "answers": [{
+            "label": "Answer Label",
+            "concept": "answer-uuid"
+          }]
+        }
+      }]
+    }]
+  }]
+}
+```
+
+### Translation File
+```json
+{
+  "form": "Form Name",
+  "language": "ar",
+  "translations": {
+    "Answer Label": "Translated Answer",
+    "Question Label": "Translated Question",
+    "Section Name": "Translated Section"
+  }
+}
+```
+
+## Usage
+
+1. Prepare Excel metadata file following the required format
+2. Configure column mappings in config.json if needed
+3. Run the form generator:
+   ```python
+   from form_generator import generate_form, generate_translation_file
+   
+   # Initialize option sets
+   initialize_option_sets('metadata.xlsx')
+   
+   # Generate form
+   form_data, _, _, _, _ = generate_form('F01', translations_data)
+   
+   # Generate translations
+   translations = generate_translation_file('F01', 'ar', translations_data)
    ```
-   pip install -r requirements.txt
-   ```
-3. Run the application:
-   ```
-   streamlit run src/app.py
-   ```
 
-### Using the Application
+## Testing
 
-1. **Configure Column Mappings**: Navigate to the Configuration page to set up column mappings that match your Excel file structure
-2. **Upload Excel File**: Upload your Excel file containing form metadata
-3. **Select Sheets**: Choose which sheets to process
-4. **Generate Forms**: Click "Generate Forms" to create JSON schemas
-5. **Download Results**: Download the generated form schemas and translation files
+Run the test suite:
+```bash
+python -m unittest tests/test_form_generator.py -v
+```
 
-## Excel File Format
-
-The Excel file should contain:
-
-- One sheet per form, with sheet names matching the configured filter pattern (default: F01, F02, etc.)
-- An "OptionSets" sheet defining answer options
-- Columns for form structure (pages, sections, questions)
-- Columns for question properties (datatype, rendering, validation, etc.)
-- Optional translation columns
+The test suite covers:
+- Question ID generation
+- Skip logic expressions
+- Option set ordering
+- Decimal number handling
+- Translation generation
 
 ## Configuration
 
-The application allows customization of:
+Use `config.json` to customize:
+- Column mappings
+- Sheet filter prefix
+- Default values
+- Translation settings
 
-- Column name mappings to match your Excel structure
-- Sheet filter patterns to identify form sheets
-- Other application settings
-
-## Development
-
-### Project Structure
-
-- `src/app.py`: Main Streamlit application
-- `src/form_generator.py`: Core form generation logic
-- `config.json`: Application configuration
-
-
-## Acknowledgements
-
-Powered by [Madiro Global Health](https://madiro.org)
-
-<img src="https://raw.githubusercontent.com/MadiroGlobalHealth/clinical-content-tools/refs/heads/main/.github/workflows/madiro.png" alt="Madiro Logo" width="150" />
-
+Example config:
+```json
+{
+  "columns": {
+    "QUESTION_COLUMN": "Question",
+    "LABEL_COLUMN": "Label if different",
+    "OPTION_SET_COLUMN": "OptionSet name"
+  },
+  "settings": {
+    "SHEET_FILTER_PREFIX": "F\\d{2}"
+  }
+}

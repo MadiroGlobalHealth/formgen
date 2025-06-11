@@ -336,12 +336,14 @@ def manage_id(original_id, id_type="question", question_id="None", all_questions
     # Replace "/" with "Or"
     cleaned_id = re.sub(r'/', ' Or ', cleaned_id)
     if not detect_range_prefixes(cleaned_id):
-        # Replace "-" with a space
-        cleaned_id = re.sub(r'-', ' ', cleaned_id)
+        # Replace "-" with a space (but not if it was already handled by remove_prefixes)
+        if not re.match(r'^\d+[a-zA-Z]', cleaned_id):  # Don't replace if it's already in "1type" format
+            cleaned_id = re.sub(r'-', ' ', cleaned_id)
         # Replace "_" with a space
         cleaned_id = re.sub(r'_', ' ', cleaned_id)
-    # Replace "-"
-    cleaned_id = re.sub(r'-', 'To', cleaned_id)
+    # Replace remaining "-" with "To" for ranges
+    if not re.match(r'^\d+[a-zA-Z]', cleaned_id):  # Don't replace if it's already in "1type" format
+        cleaned_id = re.sub(r'-', 'To', cleaned_id)
     # Replace "<"
     cleaned_id = re.sub(r'<', 'Less Than', cleaned_id)
     # Replace "<"
@@ -378,6 +380,7 @@ def remove_prefixes(text):
     """
     Remove numerical prefixes from the beginning of the string.
     Examples of prefixes: "1. ", "1.1 ", "1.1.1 ", etc.
+    Special handling for "1 - type" format to become "1type".
 
     Note: Pure integers (like "1", "2", "3") are preserved as they are likely
     intended as actual answer values, not prefixes.
@@ -386,7 +389,7 @@ def remove_prefixes(text):
     text (str): The input string from which to remove prefixes.
 
     Returns:
-    str: The string with the prefixes removed.
+    str: The string with the prefixes removed or transformed.
     """
     if text is None:
         return ""
@@ -400,8 +403,15 @@ def remove_prefixes(text):
             # Keep pure integers as they are likely answer values, not prefixes
             return text
 
-        # Use re.sub to remove the matched prefix for other cases
-        text = re.sub(r'^\d+(\.\d+)*\s*', '', text)
+        # Special handling for "number - text" format (e.g., "1 - type" -> "1type")
+        dash_pattern = re.match(r'^(\d+)\s*-\s*(.+)$', text)
+        if dash_pattern:
+            number_part = dash_pattern.group(1)
+            text_part = dash_pattern.group(2)
+            return number_part + text_part
+
+        # Use re.sub to remove the matched prefix and any trailing dots/spaces
+        text = re.sub(r'^\d+(\.\d+)*[\s\.]*', '', text)
     return text
 
 def detect_range_prefixes(text):
@@ -444,12 +454,16 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
     Returns:
         str: A skip logic expression.
     """
-    # Regex pattern to match single value condition
-    single_value_pattern = r"\[([^\]]+)\]\s*(<>|!==|==)\s*'([^']*)'"
+    # Regex pattern to match comma-separated values
+    # Example: [Number of fetuses] !== '1', '2', '3', '4'
+    comma_values_pattern = r"\[([^\]]+)\]\s*(<>|!==|==)\s*'[^']+'(?:\s*,\s*'[^']+')*"
 
     # Regex pattern to match multiple values in set notation
     # Example: [BCG] !== {'Unknown', 'Not vaccinated'}
     multi_value_pattern = r"\[([^\]]+)\]\s*(<>|!==|==)\s*\{(.+?)\}"
+
+    # Regex pattern to match single value condition
+    single_value_pattern = r"\[([^\]]+)\]\s*(<>|!==|==)\s*'([^']*)'"
 
     uuid_pattern = r'[a-fA-F0-9]{8}-' \
                 '[a-fA-F0-9]{4}-' \
@@ -458,7 +472,46 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
                 '[a-fA-F0-9]{12}|' \
                 '[a-fA-F0-9]{32}'
 
-    # First try to match the multi-value pattern
+    # First try to match comma-separated values pattern
+    comma_match = re.search(comma_values_pattern, expression)
+    if comma_match:
+        original_question_label = comma_match.group(1)
+        operator = comma_match.group(2)
+        
+        # Extract all quoted values from the matched expression
+        values_part = expression[comma_match.start():comma_match.end()]
+        values = re.findall(r"'([^']+)'", values_part)
+
+        # Normalize operator
+        if operator == '<>':
+            operator = '!=='
+        elif operator != '!==' and operator != '==':
+            return 'Only conditional operators "different than" (!==/<>) and "equals" (==) are supported'
+
+        # Get question ID
+        if re.match(uuid_pattern, original_question_label):
+            question_id = original_question_label
+        else:
+            question_id = find_question_concept_by_label(questions_answers, original_question_label)
+
+        # Build conditions for each value
+        conditions = []
+        for value in values:
+            # Check if value is a UUID
+            if re.match(uuid_pattern, value):
+                cond_answer = value
+            else:
+                cond_answer = find_answer_concept_by_label(
+                    questions_answers, original_question_label, value
+                )
+            conditions.append(f"{question_id} {operator} '{cond_answer}'")
+
+        # Join conditions with logical OR if operator is !== (different than)
+        # or with logical AND if operator is == (equals)
+        logical_operator = ' || ' if operator == '!==' else ' && '
+        return '(' + logical_operator.join(conditions) + ')'
+
+    # Then try to match the multi-value pattern
     multi_match = re.search(multi_value_pattern, expression)
     if multi_match:
         original_question_label, operator, values_str = multi_match.groups()
