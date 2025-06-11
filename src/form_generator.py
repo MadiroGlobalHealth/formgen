@@ -159,6 +159,16 @@ def initialize_option_sets(metadata_file=None):
 
     try:
         option_sets = read_excel_skip_strikeout(filepath=file_to_use, sheet_name='OptionSets', header_row=2)
+        
+        # Check for duplicate column names and handle them
+        if option_sets.columns.duplicated().any():
+            print("Warning: Duplicate column names found in OptionSets sheet. Renaming duplicates.")
+            # Make column names unique by adding suffixes
+            cols = pd.Series(option_sets.columns)
+            for dup in cols[cols.duplicated()].unique():
+                cols[cols[cols == dup].index.values.tolist()] = [dup if i == 0 else f'{dup}_{i}' for i in range(sum(cols == dup))]
+            option_sets.columns = cols
+            
     except Exception as e:
         # Try a direct pandas approach as fallback
         try:
@@ -166,12 +176,30 @@ def initialize_option_sets(metadata_file=None):
             # Try with openpyxl engine first
             option_sets = pd.read_excel(file_to_use, sheet_name='OptionSets', header=1, engine='openpyxl')
             print("Successfully read OptionSets with pandas using openpyxl engine.")
+            
+            # Check for duplicate column names and handle them
+            if option_sets.columns.duplicated().any():
+                print("Warning: Duplicate column names found in OptionSets sheet. Renaming duplicates.")
+                cols = pd.Series(option_sets.columns)
+                for dup in cols[cols.duplicated()].unique():
+                    cols[cols[cols == dup].index.values.tolist()] = [dup if i == 0 else f'{dup}_{i}' for i in range(sum(cols == dup))]
+                option_sets.columns = cols
+                
         except Exception as pandas_error_openpyxl:
             try:
                 # Try with default engine as fallback
                 print(f"Attempting with default engine...")
                 option_sets = pd.read_excel(file_to_use, sheet_name='OptionSets', header=1)
                 print("Successfully read OptionSets with pandas using default engine.")
+                
+                # Check for duplicate column names and handle them
+                if option_sets.columns.duplicated().any():
+                    print("Warning: Duplicate column names found in OptionSets sheet. Renaming duplicates.")
+                    cols = pd.Series(option_sets.columns)
+                    for dup in cols[cols.duplicated()].unique():
+                        cols[cols[cols == dup].index.values.tolist()] = [dup if i == 0 else f'{dup}_{i}' for i in range(sum(cols == dup))]
+                    option_sets.columns = cols
+                    
             except Exception as pandas_error_default:
                 raise Exception(f"Failed to read OptionSets sheet: {str(e)}. "
                                f"Pandas fallback with openpyxl failed: {str(pandas_error_openpyxl)}. "
@@ -180,14 +208,14 @@ def initialize_option_sets(metadata_file=None):
 # Function to fetch options for a given option set
 def get_options(option_set_name):
     """
-    Fetch options for a given option set name, sorted by the "#" column.
+    Fetch options for a given option set name, sorted by the "Order" column.
 
     Args:
         option_set_name (str): The name of the option set.
 
     Returns:
         tuple: A tuple containing (options_list, found_flag) where:
-            - options_list is a list of dictionaries containing option set details, sorted by "#" column
+            - options_list is a list of dictionaries containing option set details, sorted by "Order" column
             - found_flag is a boolean indicating if the option set was found
     """
     if option_sets is None:
@@ -196,10 +224,36 @@ def get_options(option_set_name):
     filtered_options = option_sets[option_sets['OptionSet name'] == option_set_name]
     options_found = len(filtered_options) > 0
 
-    if options_found and '#' in filtered_options.columns:
-        # Sort by the "#" column if it exists
-        filtered_options = filtered_options.sort_values(by='#')
+    if options_found:
+        # Find the 'Order' column
+        order_column = next((col for col in filtered_options.columns if str(col) == 'Order'), None)
+        
+        if order_column is not None:
+            try:
+                # Create a copy to avoid modifying the original DataFrame
+                filtered_options = filtered_options.copy()
+                
+                # Convert Order column to numeric, handling non-numeric values as NaN
+                filtered_options[order_column] = pd.to_numeric(
+                    filtered_options[order_column], 
+                    errors='coerce'
+                )
+                # Sort by the Order column numerically, putting NaN values at the end
+                filtered_options = filtered_options.sort_values(
+                    by=order_column,
+                    na_position='last'
+                )
+            except Exception as e:
+                print(f"Warning: Could not sort by 'Order' column: {str(e)}. Returning unsorted options.")
 
+    # Handle duplicate columns before converting to dict to avoid warnings
+    if filtered_options.columns.duplicated().any():
+        # Make column names unique by adding suffixes, but keep the original data
+        cols = pd.Series(filtered_options.columns)
+        for dup in cols[cols.duplicated()].unique():
+            cols[cols[cols == dup].index.values.tolist()] = [dup if i == 0 else f'{dup}_{i}' for i in range(sum(cols == dup))]
+        filtered_options.columns = cols
+    
     return filtered_options.to_dict(orient='records'), options_found
 
 def find_question_concept_by_label(questions_answers, question_label):
@@ -403,8 +457,9 @@ def remove_prefixes(text):
             # Keep pure integers as they are likely answer values, not prefixes
             return text
 
-        # Special handling for "number - text" format (e.g., "1 - type" -> "1type")
-        dash_pattern = re.match(r'^(\d+)\s*-\s*(.+)$', text)
+        # Special handling for "number - text" format only (e.g., "1 - type" -> "1type")
+        # Do NOT modify "text - number" or "text number - text" formats
+        dash_pattern = re.match(r'^(\d+)\s*-\s*([^0-9].*)$', text)
         if dash_pattern:
             number_part = dash_pattern.group(1)
             text_part = dash_pattern.group(2)
@@ -642,8 +697,10 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
         return None  # Skip empty rows or rows with empty 'Question'
 
     # Manage values and default values
+    # For question label: use "Label if different" if not empty, otherwise use "Question"
     original_question_label = (row[LABEL_COLUMN] if LABEL_COLUMN in columns and
-                            pd.notnull(row[LABEL_COLUMN]) else row[QUESTION_COLUMN])
+                            pd.notnull(row[LABEL_COLUMN]) and str(row[LABEL_COLUMN]).strip() != '' 
+                            else row[QUESTION_COLUMN])
 
     question_label_translation = (
         row[TRANSLATION_QUESTION_COLUMN].replace('"', '').replace("'", '').replace('\\', '/') if TRANSLATION_QUESTION_COLUMN in columns and
@@ -651,8 +708,13 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
                             )
 
     question_label = manage_label(original_question_label)
-    question_id = (row[QUESTION_ID_COLUMN] if QUESTION_ID_COLUMN in columns and
-                        pd.notnull(row[QUESTION_ID_COLUMN]) else manage_id(original_question_label))
+    
+    # For question ID: use "Question ID" column if provided, otherwise generate from "Question" column in camelCase
+    if QUESTION_ID_COLUMN in columns and pd.notnull(row[QUESTION_ID_COLUMN]):
+        question_id = row[QUESTION_ID_COLUMN]
+    else:
+        # Generate ID from "Question" column (not "Label if different") to ensure consistency
+        question_id = manage_id(row[QUESTION_COLUMN], all_questions_answers=ALL_QUESTIONS_ANSWERS)
 
     original_question_info = (row[TOOLTIP_COLUMN_NAME] if TOOLTIP_COLUMN_NAME in columns and
                             pd.notnull(row[TOOLTIP_COLUMN_NAME]) else None )
