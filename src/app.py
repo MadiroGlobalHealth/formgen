@@ -18,12 +18,6 @@ def get_git_commit():
         return subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
     except:
         return "unknown"
-    
-def get_git_commit_date():
-    try:
-        return subprocess.check_output(['git', 'show', '-s', '--format=%ct', get_git_commit()]).decode('ascii').strip()
-    except Exception:
-        return "unknown"
 
 # Load environment variables
 load_dotenv()
@@ -487,14 +481,7 @@ def main():
 
     # Add version number (git commit hash) below the logo
     commit_hash = get_git_commit()
-    commit_date_unix = get_git_commit_date()
-    try:
-        import datetime
-        commit_date_str = datetime.datetime.utcfromtimestamp(int(commit_date_unix)).strftime('%Y-%m-%d')
-    except Exception:
-        commit_date_str = "unknown"
-
-    st.sidebar.markdown(f"<p style='color: #888; font-size: 0.7em;'>Version: {commit_hash} - {commit_date_str}</p>", unsafe_allow_html=True)
+    st.sidebar.markdown(f"<p style='color: #888; font-size: 0.7em;'>Version: {commit_hash}</p>", unsafe_allow_html=True)
 
     # Close the footer div
     st.sidebar.markdown("</div>", unsafe_allow_html=True)
