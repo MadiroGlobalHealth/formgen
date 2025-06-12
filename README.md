@@ -1,37 +1,55 @@
-# OpenMRS Form Generator
+ # OpenMRS Form Generator
 
 A Python-based tool to generate OpenMRS 3.x form schemas from Excel metadata files.
 
 ## Features
 
-### 1. Question ID Generation
+### 1. Enhanced Question ID Generation
 - Supports various ID formats:
-  - Numbered prefixes: `"1 - type"` → `"1type"`
+  - Simple number-dash-text: `"1 - type"` → `"1type"` (concatenated)
+  - Text-dash-number: `"Type - 1"` → `"Type - 1"` (preserved)
+  - Complex patterns: `"Type 1 - Gynaecology"` → `"Type 1 - Gynaecology"` (preserved)
   - Regular prefixes: `"1. Question"` → `"question"`
-  - Maintains uniqueness by appending numbers for duplicates
+- **Maintains uniqueness by appending numbers for duplicates**:
+  - When a duplicate ID is detected, the script appends an incrementing number to the ID (e.g., `question_1`, `question_2`).
+  - The original question label is preserved and a warning is added to the question.
 - IDs are compatible with custom expressions and skip logic
 
-### 2. Skip Logic Support
+### 2. Answer Options Handling
+- **Numeric sorting** by "#" column in OptionSets:
+  - Proper numeric order: 1, 2, 3, 10, 20 (not alphabetical)
+  - Supports decimal numbers (e.g., 1.5)
+  - Consistent sorting across form generation
+
+### 3. Skip Logic Support
 - Multiple condition formats:
   ```
   # Comma-separated values
   Hide question if [Number of fetuses] !== '1', '2', '3', '4'
+  ```
   
+  ```
   # Set notation
   Hide question if [BCG] !== {'Unknown', 'Not vaccinated'}
+  ```
   
+  ```
   # Single value
   Hide question if [Question] !== 'Value'
   ```
 - Generates proper logical expressions with OR/AND operators
-- Maintains compatibility with generated question IDs
+- **Maintains compatibility with generated question IDs**:
+  - Skip logic expressions are automatically updated to use modified question IDs, ensuring that skip logic remains functional even when IDs are changed.
 
-### 3. Option Set Handling
-- Respects order defined in "#" column of OptionSets tab
-- Maintains order in generated JSON schema
+### 4. Option Set Handling
+- **Numeric sorting** by "#" column of OptionSets tab (1, 2, 3, 10, 20 - not 1, 10, 2, 20, 3)
+- Supports decimal numbers in "#" column (e.g., 1.5 between 1 and 2)
+- Non-numeric values in "#" column are placed at the end
+- Maintains sorted order in generated JSON schema
+- Handles duplicate column names gracefully (uses first occurrence)
 - Supports external IDs and translations
 
-### 4. Data Type Support
+### 5. Data Type Support
 - Decimal number handling:
   - `decimalnumber` rendering: allows decimals (`"disallowDecimals": false`)
   - `number` rendering: disallows decimals (`"disallowDecimals": true`)
@@ -46,7 +64,7 @@ A Python-based tool to generate OpenMRS 3.x form schemas from Excel metadata fil
   - markdown
   - workspace-launcher
 
-### 5. Translation Support
+### 6. Translation Support
 - Generates translation files for form labels
 - Supports section, question, tooltip, and answer translations
 - Maintains alphabetical order in translation files

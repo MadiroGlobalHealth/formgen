@@ -206,22 +206,24 @@ def initialize_option_sets(metadata_file=None):
                                f"Default engine fallback also failed: {str(pandas_error_default)}")
 
 # Function to fetch options for a given option set
-def get_options(option_set_name):
+def get_options(option_set_name, option_sets_override=None):
     """
     Fetch options for a given option set name, sorted by the "Order" column.
 
     Args:
         option_set_name (str): The name of the option set.
+        option_sets_override (pd.DataFrame, optional): Override for option_sets. Defaults to None.
 
     Returns:
         tuple: A tuple containing (options_list, found_flag) where:
             - options_list is a list of dictionaries containing option set details, sorted by "Order" column
             - found_flag is a boolean indicating if the option set was found
     """
-    if option_sets is None:
+    option_sets_to_use = option_sets_override if option_sets_override is not None else option_sets
+    if option_sets_to_use is None:
         raise ValueError("Option sets not initialized. Call initialize_option_sets first.")
 
-    filtered_options = option_sets[option_sets['OptionSet name'] == option_set_name]
+    filtered_options = option_sets_to_use[option_sets_to_use['OptionSet name'] == option_set_name]
     options_found = len(filtered_options) > 0
 
     if options_found:
@@ -268,12 +270,15 @@ def find_question_concept_by_label(questions_answers, question_label):
         str: The question ID if found, otherwise a generated ID
     """
     if not questions_answers:
-        return manage_id(question_label)
+        question_id, _, _ = manage_id(question_label)
+        return question_id
 
     for question in questions_answers:
-        if question.get('question_id') == manage_id(question_label):
+        test_id, _, _ = manage_id(question_label)
+        if question.get('question_id') == test_id:
             return question.get('question_id')
-    return manage_id(question_label)
+    question_id, _, _ = manage_id(question_label)
+    return question_id
 
 def find_answer_concept_by_label(questions_answers, question_id, answer_label):
     """
@@ -288,14 +293,17 @@ def find_answer_concept_by_label(questions_answers, question_id, answer_label):
         str: The answer concept if found, otherwise a generated ID
     """
     if not questions_answers:
-        return manage_id(answer_label)
+        answer_id, _, _ = manage_id(answer_label)
+        return answer_id
 
     for question in questions_answers:
-        if question.get('question_id') == manage_id(question_id):
+        test_id, _, _ = manage_id(question_id)
+        if question.get('question_id') == test_id:
             for answer in question.get('questionOptions', {}).get('answers', []):
                 if answer.get('label') == answer_label:
                     return answer.get('concept')
-    return manage_id(answer_label)
+    answer_id, _, _ = manage_id(answer_label)
+    return answer_id
 
 def safe_json_loads(s):
     """
@@ -360,10 +368,21 @@ def manage_label(original_label):
 
     return str(original_label)
 
+# Dictionary to track ID modifications for skip logic updates
+ID_MODIFICATIONS = {}
+
+def reset_id_modifications():
+    """
+    Reset the ID modifications tracking dictionary.
+    Should be called at the start of each form generation.
+    """
+    global ID_MODIFICATIONS
+    ID_MODIFICATIONS.clear()
+
 # Manage IDs
 def manage_id(original_id, id_type="question", question_id="None", all_questions_answers=None):
     """
-    Manage IDs.
+    Manage IDs with enhanced uniqueness checking and tracking.
 
     Args:
         original_id (str): The original ID.
@@ -373,14 +392,20 @@ def manage_id(original_id, id_type="question", question_id="None", all_questions
         Defaults to None.
 
     Returns:
-        str: The cleaned ID.
+        tuple: A tuple containing (cleaned_id, was_modified, original_label) where:
+            - cleaned_id (str): The final unique ID
+            - was_modified (bool): Whether the ID was modified to ensure uniqueness
+            - original_label (str): The original label before cleaning, for reference
     """
     if all_questions_answers is None:
         all_questions_answers = []
 
+    # Store original label for reference
+    original_label = str(original_id) if original_id is not None else ""
+
     # Handle None or empty values
     if original_id is None:
-        return str(uuid.uuid4())
+        return str(uuid.uuid4()), True, original_label
 
     # Convert to string to handle integers and other types
     original_id = str(original_id)
@@ -400,7 +425,7 @@ def manage_id(original_id, id_type="question", question_id="None", all_questions
         cleaned_id = re.sub(r'-', 'To', cleaned_id)
     # Replace "<"
     cleaned_id = re.sub(r'<', 'Less Than', cleaned_id)
-    # Replace "<"
+    # Replace ">"
     cleaned_id = re.sub(r'>', 'More Than', cleaned_id)
     cleaned_id = camel_case(cleaned_id)
     # Replace '+' characters with 'plus'
@@ -415,20 +440,30 @@ def manage_id(original_id, id_type="question", question_id="None", all_questions
     # Handle empty string after cleaning
     if not cleaned_id:
         cleaned_id = f"id_{str(uuid.uuid4()).replace('-', '')[:8]}"
+        return cleaned_id, True, original_label
 
     # Ensure first character is lowercase (only if string is not empty)
     if len(cleaned_id) > 0:
         cleaned_id = cleaned_id[0].lower() + cleaned_id[1:]
 
+    was_modified = False
     if id_type == "answer" and cleaned_id == 'other':
         cleaned_id = str(question_id)+str(cleaned_id.capitalize())
+        was_modified = True
+
     if all_questions_answers is not None:
         duplicate_count = 1
         original_cleaned_id = cleaned_id
         while any(q['question_id'] == cleaned_id for q in all_questions_answers):
             cleaned_id = f"{original_cleaned_id}_{duplicate_count}"
+            was_modified = True
             duplicate_count += 1
-    return cleaned_id
+            # Track the modification for skip logic updates
+            if was_modified:
+                ID_MODIFICATIONS[original_label] = cleaned_id
+                print(f"Warning: Duplicate question ID found. '{original_label}' modified to '{cleaned_id}'")
+
+    return cleaned_id, was_modified, original_label
 
 def remove_prefixes(text):
     """
@@ -679,7 +714,7 @@ def add_translation(translations, label, translated_string):
             return
     translations[label] = translated_string
 
-def generate_question(row, columns, question_translations, missing_option_sets=None):
+def generate_question(row, columns, question_translations, missing_option_sets=None, option_sets_override=None):
     """
     Generate a question JSON from a row of the OptionSets sheet.
 
@@ -697,7 +732,7 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
         return None  # Skip empty rows or rows with empty 'Question'
 
     # Manage values and default values
-    # For question label: use "Label if different" if not empty, otherwise use "Question"
+    # For question label: use "Question" column as default, but use "Label if different" if it's not empty
     original_question_label = (row[LABEL_COLUMN] if LABEL_COLUMN in columns and
                             pd.notnull(row[LABEL_COLUMN]) and str(row[LABEL_COLUMN]).strip() != '' 
                             else row[QUESTION_COLUMN])
@@ -710,15 +745,34 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
     question_label = manage_label(original_question_label)
     
     # For question ID: use "Question ID" column if provided, otherwise generate from "Question" column in camelCase
-    if QUESTION_ID_COLUMN in columns and pd.notnull(row[QUESTION_ID_COLUMN]):
-        question_id = row[QUESTION_ID_COLUMN]
-    else:
-        # Generate ID from "Question" column (not "Label if different") to ensure consistency
-        question_id = manage_id(row[QUESTION_COLUMN], all_questions_answers=ALL_QUESTIONS_ANSWERS)
-
     original_question_info = (row[TOOLTIP_COLUMN_NAME] if TOOLTIP_COLUMN_NAME in columns and
                             pd.notnull(row[TOOLTIP_COLUMN_NAME]) else None )
     question_info = manage_label(original_question_info)
+
+    if OPTION_SET_COLUMN in columns and pd.notnull(row[OPTION_SET_COLUMN]):
+        option_set_name = row[OPTION_SET_COLUMN]
+        options, option_set_found = get_options(option_set_name, option_sets_override)
+        sorted_options = options
+    else:
+        option_set_name = None
+        options = []
+        option_set_found = False
+        sorted_options = []
+
+    # For question ID: use "Question ID" column if provided, otherwise generate from "Question" column in camelCase
+    if QUESTION_ID_COLUMN in columns and pd.notnull(row[QUESTION_ID_COLUMN]):
+        question_id, was_modified, original_label = manage_id(row[QUESTION_ID_COLUMN], all_questions_answers=ALL_QUESTIONS_ANSWERS)
+    else:
+        # Generate ID from "Question" column (not "Label if different") to ensure consistency
+        question_id, was_modified, original_label = manage_id(row[QUESTION_COLUMN], all_questions_answers=ALL_QUESTIONS_ANSWERS)
+
+    # Add the question to ALL_QUESTIONS_ANSWERS early to ensure proper ID tracking
+    question_entry = {
+        "question_id": question_id,
+        "question_label": original_label,
+        "questionOptions": {"answers": []}
+    }
+    ALL_QUESTIONS_ANSWERS.append(question_entry)
 
     question_concept_id = (row[EXTERNAL_ID_COLUMN] if EXTERNAL_ID_COLUMN in columns and
                         pd.notnull(row[EXTERNAL_ID_COLUMN]) else question_id)
@@ -806,74 +860,92 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
         question['questionOptions']['calculate'] = {"calculateExpression": row[CALCULATION_COLUMN]}
 
     if SKIP_LOGIC_COLUMN in columns and pd.notnull(row[SKIP_LOGIC_COLUMN]):
+        # Update skip logic expression with modified IDs
+        skip_logic = row[SKIP_LOGIC_COLUMN]
+        for original_label, modified_id in ID_MODIFICATIONS.items():
+            # Replace the original label in skip logic with the modified ID
+            skip_logic = skip_logic.replace(f"[{original_label}]", f"[{modified_id}]")
+        
         question['hide'] = {"hideWhenExpression": build_skip_logic_expression(
-            row[SKIP_LOGIC_COLUMN], ALL_QUESTIONS_ANSWERS
+            skip_logic, ALL_QUESTIONS_ANSWERS
             )}
 
-    if OPTION_SET_COLUMN in columns and pd.notnull(row[OPTION_SET_COLUMN]):
-        option_set_name = row[OPTION_SET_COLUMN]
-        options, option_set_found = get_options(option_set_name)
-        question['questionOptions']['answers'] = []
+    # Add warning if ID was modified
+    if was_modified:
+        question['idModified'] = True
+        question['originalLabel'] = original_label
+        question['warning'] = f"Question ID was modified from '{original_label}' to ensure uniqueness"
 
-        # Flag if optionSet is not found
-        if not option_set_found:
-            question['optionSetNotFound'] = True
-            question['optionSetName'] = option_set_name
-            print(f"Warning: OptionSet '{option_set_name}' not found for question '{question_label}'")
+    question['questionOptions']['answers'] = []
 
-            # Add to missing_option_sets list if provided
-            if missing_option_sets is not None:
-                missing_option_sets.append({
-                    "question_id": question_id,
-                    "question_label": question_label,
-                    "optionSet_name": option_set_name
-                })
+    # Flag if optionSet is not found
+    if not option_set_found:
+        question['optionSetNotFound'] = True
+        question['optionSetName'] = option_set_name
+        print(f"Warning: OptionSet '{option_set_name}' not found for question '{question_label}'")
 
-            # Add a placeholder answer when optionSet is not found
-            # This allows the form to be generated even with missing optionSets
-            placeholder_answer = {
-                "label": f"[Missing OptionSet: {option_set_name}]",
-                "concept": f"missing_optionset_{manage_id(option_set_name)}"
+        # Add to missing_option_sets list if provided
+        if missing_option_sets is not None:
+            missing_option_sets.append({
+                "question_id": question_id,
+                "question_label": question_label,
+                "optionSet_name": option_set_name
+            })
+
+        # Add a placeholder answer when optionSet is not found
+        # This allows the form to be generated even with missing optionSets
+        placeholder_concept, _, _ = manage_id(option_set_name)
+        placeholder_answer = {
+            "label": f"[Missing OptionSet: {option_set_name}]",
+            "concept": f"missing_optionset_{placeholder_concept}"
+        }
+        question['questionOptions']['answers'].append(placeholder_answer)
+
+        # Add a note in the question to make it clear this is a placeholder
+        question['questionOptions']['placeholder'] = True
+ 
+    # Only process options if the optionSet was found
+    if option_set_found:
+        # Process answers while preserving the order from sorted_options
+        answers_list = []
+        # sorted_options is already sorted by the Order column from get_options()
+        for opt in sorted_options:
+            # Handle answer concept generation
+            if opt['External ID'] == '#N/A':
+                answer_concept, _, _ = manage_id(opt['Answers'])
+            elif EXTERNAL_ID_COLUMN in columns and pd.notnull(opt[EXTERNAL_ID_COLUMN]):
+                answer_concept = opt['External ID']
+            else:
+                answer_concept, _, _ = manage_id(opt['Answers'], id_type="answer",
+                                               question_id=question_id,
+                                               all_questions_answers=ALL_QUESTIONS_ANSWERS)
+        
+            answer = {
+                "label": manage_label(opt['Answers']),
+                "concept": answer_concept
             }
-            question['questionOptions']['answers'].append(placeholder_answer)
+            
+            # Add to answers_list maintaining the order from sorted_options
+            answers_list.append(answer)
+            
+            # Manage Answer labels
+            answer_label = manage_label(opt['Answers'])
+            translated_answer_label = (row[TRANSLATION_ANSWER_COLUMN] if TRANSLATION_ANSWER_COLUMN in columns and
+                            pd.notnull(row[TRANSLATION_ANSWER_COLUMN]) else None )
+            add_translation(question_translations, answer_label, translated_answer_label)
 
-            # Add a note in the question to make it clear this is a placeholder
-            question['questionOptions']['placeholder'] = True
+        # Set the answers in the question options, preserving the order
+        question['questionOptions']['answers'] = answers_list
 
-        # Only process options if the optionSet was found
-        if option_set_found:
-            for opt in options:
-                answer = {
-                    "label": manage_label(opt['Answers']),
-                    "concept": (manage_id(opt['Answers']) if opt['External ID'] == '#N/A' else
-                        (opt['External ID'] if EXTERNAL_ID_COLUMN in columns and
-                            pd.notnull(opt[EXTERNAL_ID_COLUMN])
-                            else manage_id(opt['Answers'], id_type="answer",
-                                question_id=question_id,
-                                all_questions_answers=ALL_QUESTIONS_ANSWERS)))
-                }
-                question['questionOptions']['answers'].append(answer)
-                # Manage Answer labels
-                answer_label = manage_label(opt['Answers'])
-                translated_answer_label = (row[TRANSLATION_ANSWER_COLUMN] if TRANSLATION_ANSWER_COLUMN in columns and
-                                pd.notnull(row[TRANSLATION_ANSWER_COLUMN]) else None )
-                add_translation(question_translations, answer_label, translated_answer_label)
-
-        ALL_QUESTIONS_ANSWERS.append({
-            "question_id": question['id'],
-            "question_label": question['label'],
-            "questionOptions": {
-                "answers": question['questionOptions']['answers']
-            }
-        })
+    # Update the existing entry in ALL_QUESTIONS_ANSWERS with the final answers
+    for qa_entry in ALL_QUESTIONS_ANSWERS:
+        if qa_entry['question_id'] == question['id']:
+            qa_entry['questionOptions']['answers'] = question['questionOptions']['answers']
+            break
 
     # Pop answers key if answers array is empty
     if 'answers' in question['questionOptions'] and not question['questionOptions']['answers']:
         question['questionOptions'].pop('answers')
-
-    # Rename the variable inside the 'with' statement
-    with open('all_questions_answers.json', 'w', encoding='utf-8') as file:
-        json.dump(ALL_QUESTIONS_ANSWERS, file, indent=2)
 
     return question
 
@@ -890,9 +962,10 @@ def generate_form(sheet_name, form_translations, metadata_file=None):
         tuple: A tuple containing (form_data, concept_ids_set, count_total_questions, count_total_answers, missing_option_sets)
             where missing_option_sets is a list of dictionaries with information about missing optionSets.
     """
-    # Reset the global ALL_QUESTIONS_ANSWERS list
+    # Reset the global ALL_QUESTIONS_ANSWERS list and ID modifications tracking
     global ALL_QUESTIONS_ANSWERS
     ALL_QUESTIONS_ANSWERS = []
+    reset_id_modifications()
 
     # Track missing optionSets
     missing_option_sets = []
