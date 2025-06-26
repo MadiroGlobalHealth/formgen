@@ -878,8 +878,8 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
 
     question['questionOptions']['answers'] = []
 
-    # Flag if optionSet is not found
-    if not option_set_found:
+    # Flag if optionSet is not found and option_set_name is not None or empty
+    if not option_set_found and option_set_name:
         question['optionSetNotFound'] = True
         question['optionSetName'] = option_set_name
         print(f"Warning: OptionSet '{option_set_name}' not found for question '{question_label}'")
