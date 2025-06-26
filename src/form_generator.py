@@ -838,6 +838,11 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
         question['questionOptions']['disallowDecimals'] = False
     elif question_rendering_value == 'number':
         question['questionOptions']['disallowDecimals'] = True
+        # Only set min to 0 if not already set from Lower limit
+        if 'min' not in question['questionOptions']:
+            question['questionOptions']['min'] = 0
+        # max is already set from Upper limit if provided
+        question['questionOptions']['step'] = 1
 
     add_translation(question_translations, question_label, question_label_translation)
 
