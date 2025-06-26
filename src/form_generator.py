@@ -14,8 +14,11 @@ from dotenv import load_dotenv
 # Load the environment variables
 load_dotenv()
 
+import os
+
 # Load the configuration settings from config.json
-with open('config.json', 'r', encoding='utf-8') as f:
+config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'config.json')
+with open(config_path, 'r', encoding='utf-8') as f:
     config = json.load(f)
 
 # Extract the configuration settings
@@ -832,9 +835,9 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
 
     # Handle decimal numbers based on rendering type
     if question_rendering_value == 'decimalnumber':
-        question['disallowDecimals'] = False
+        question['questionOptions']['disallowDecimals'] = False
     elif question_rendering_value == 'number':
-        question['disallowDecimals'] = True
+        question['questionOptions']['disallowDecimals'] = True
 
     add_translation(question_translations, question_label, question_label_translation)
 
