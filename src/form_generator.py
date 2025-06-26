@@ -599,9 +599,9 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
                 )
             conditions.append(f"{question_id} {operator} '{cond_answer}'")
 
-        # Join conditions with logical AND if operator is !== (different than)
+        # Join conditions with logical OR if operator is !== (different than)
         # or with logical AND if operator is == (equals)
-        logical_operator = ' && '
+        logical_operator = ' || ' if operator == '!==' else ' && '
         return '(' + logical_operator.join(conditions) + ')'
 
     # Then try to match the multi-value pattern
@@ -637,9 +637,9 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
                 )
             conditions.append(f"{question_id} {operator} '{cond_answer}'")
 
-        # Join conditions with logical AND if operator is !== (different than)
+        # Join conditions with logical OR if operator is !== (different than)
         # or with logical AND if operator is == (equals)
-        logical_operator = ' && '
+        logical_operator = ' || ' if operator == '!==' else ' && '
         return '(' + logical_operator.join(conditions) + ')'
 
     # If not a multi-value pattern, try the single value pattern
