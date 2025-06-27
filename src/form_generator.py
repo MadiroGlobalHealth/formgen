@@ -789,11 +789,14 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
         # Generate ID from "Question" column (not "Label if different") to ensure consistency
         question_id, was_modified, original_label = manage_id(row[QUESTION_COLUMN], all_questions_answers=ALL_QUESTIONS_ANSWERS)
 
+    question_rendering_value = (row[RENDERING_COLUMN].lower() if pd.notnull(row[RENDERING_COLUMN]) else 'text')
+    question_rendering = manage_rendering(question_rendering_value)
+
     # Add the question to ALL_QUESTIONS_ANSWERS early to ensure proper ID tracking
     question_entry = {
         "question_id": question_id,
         "question_label": original_label,
-        "questionOptions": {"answers": []}
+        "questionOptions": {"answers": [], "rendering": question_rendering}
     }
     ALL_QUESTIONS_ANSWERS.append(question_entry)
 
@@ -807,10 +810,6 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
 
     question_required = (str(row[MANDATORY_COLUMN]).lower() == 'true' if MANDATORY_COLUMN in columns and
                         pd.notnull(row[MANDATORY_COLUMN]) else False)
-
-    question_rendering_value = (row[RENDERING_COLUMN].lower() if pd.notnull(row[RENDERING_COLUMN]) else 'text')
-
-    question_rendering = manage_rendering(question_rendering_value)
 
     # Build the question JSON
     question = {
