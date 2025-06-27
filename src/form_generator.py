@@ -536,6 +536,14 @@ def camel_case(text):
         camel_case_text += word.capitalize()
     return camel_case_text
 
+def is_multiselect_question(question_id, questions_answers):
+    for q in questions_answers:
+        if q.get('question_id') == question_id:
+            rendering = q.get('questionOptions', {}).get('rendering', '').lower()
+            if rendering == 'multicheckbox':
+                return True
+    return False
+
 def build_skip_logic_expression(expression: str, questions_answers) -> str:
     """
     Build a skip logic expression from an expression string.
@@ -547,14 +555,6 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
     Returns:
         str: A skip logic expression.
     """
-    # Helper to check if a question is multi-select
-    def is_multiselect(question_id):
-        for q in questions_answers:
-            if q.get('question_id') == question_id:
-                rendering = q.get('questionOptions', {}).get('rendering', '').lower()
-                return rendering in ['multicheckbox', 'inlinemulticheckbox']
-        return False
-
     # Regex pattern to match comma-separated values
     # Example: [Number of fetuses] !== '1', '2', '3', '4'
     comma_values_pattern = r"\[([^\]]+)\]\s*(<>|!==|==)\s*'[^']+'(?:\s*,\s*'[^']+')*"
@@ -595,12 +595,10 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
         else:
             question_id = find_question_concept_by_label(questions_answers, original_question_label)
 
-        multi_select = is_multiselect(question_id)
+        multi_select = is_multiselect_question(question_id, questions_answers)
 
-        # Build conditions for each value
         conditions = []
         for value in values:
-            # Check if value is a UUID
             if re.match(uuid_pattern, value):
                 cond_answer = value
             else:
@@ -608,16 +606,13 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
                     questions_answers, original_question_label, value
                 )
             if multi_select:
-                conditions.append(f"includes({question_id}, '{cond_answer}')")
+                if operator == '!==' or operator == '<>':
+                    conditions.append(f"!includes({question_id}, '{cond_answer}')")
+                else:
+                    conditions.append(f"includes({question_id}, '{cond_answer}')")
             else:
                 conditions.append(f"{question_id} {operator} '{cond_answer}'")
-
-        # For multi-select, join with '||' (if any match, hide)
-        # For others, keep the previous logic
-        if multi_select:
-            logical_operator = ' || '
-        else:
-            logical_operator = ' && '
+        logical_operator = ' && '
         return '(' + logical_operator.join(conditions) + ')'
 
     # Then try to match the multi-value pattern
@@ -637,16 +632,14 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
         else:
             question_id = find_question_concept_by_label(questions_answers, original_question_label)
 
-        multi_select = is_multiselect(question_id)
+        multi_select = is_multiselect_question(question_id, questions_answers)
 
         # Parse the values from the set notation
         # Split by comma and remove quotes and whitespace
         values = [v.strip().strip('\'"') for v in values_str.split(',')]
 
-        # Build conditions for each value
         conditions = []
         for value in values:
-            # Check if value is a UUID
             if re.match(uuid_pattern, value):
                 cond_answer = value
             else:
@@ -654,14 +647,13 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
                     questions_answers, original_question_label, value
                 )
             if multi_select:
-                conditions.append(f"includes({question_id}, '{cond_answer}')")
+                if operator == '!==' or operator == '<>':
+                    conditions.append(f"!includes({question_id}, '{cond_answer}')")
+                else:
+                    conditions.append(f"includes({question_id}, '{cond_answer}')")
             else:
                 conditions.append(f"{question_id} {operator} '{cond_answer}'")
-
-        if multi_select:
-            logical_operator = ' || '
-        else:
-            logical_operator = ' && '
+        logical_operator = ' && '
         return '(' + logical_operator.join(conditions) + ')'
 
     # If not a multi-value pattern, try the single value pattern
@@ -681,9 +673,8 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
         else:
             question_id = find_question_concept_by_label(questions_answers, original_question_label)
 
-        multi_select = is_multiselect(question_id)
+        multi_select = is_multiselect_question(question_id, questions_answers)
 
-        # Get answer concept
         if re.match(uuid_pattern, original_cond_answer):
             cond_answer = original_cond_answer
         else:
@@ -692,9 +683,11 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
             )
 
         if multi_select:
-            return f"includes({question_id}, '{cond_answer}')"
-        else:
-            return f"{question_id} {operator} '{cond_answer}'"
+            if operator == '!==' or operator == '<>':
+                return f"!includes({question_id}, '{cond_answer}')"
+            else:
+                return f"includes({question_id}, '{cond_answer}')"
+        return f"{question_id} {operator} '{cond_answer}'"
 
     return "Invalid expression format"
 
