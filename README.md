@@ -1,103 +1,89 @@
- # OpenMRS Form Generator
+# OpenMRS Form Generator (`formgen`)
 
-A Python-based tool to generate OpenMRS 3.x form schemas from Excel metadata files.
+A Python-based tool to generate OpenMRS 3.x form schemas from Excel metadata files. Designed for rapid, robust, and flexible form creation, supporting advanced skip logic, translations, and a wide range of question types.
 
-## Features
+---
 
-### 1. Enhanced Question ID Generation
+## 🚀 Features
+
+### 1. **Flexible Question ID Generation**
 - Supports various ID formats:
-  - Simple number-dash-text: `"1 - type"` → `"1type"` (concatenated)
-  - Text-dash-number: `"Type - 1"` → `"Type - 1"` (preserved)
-  - Complex patterns: `"Type 1 - Gynaecology"` → `"Type 1 - Gynaecology"` (preserved)
-  - Regular prefixes: `"1. Question"` → `"question"`
-- **Maintains uniqueness by appending numbers for duplicates**:
-  - When a duplicate ID is detected, the script appends an incrementing number to the ID (e.g., `question_1`, `question_2`).
-  - The original question label is preserved and a warning is added to the question.
-- IDs are compatible with custom expressions and skip logic
+  - `"1 - type"` → `"1type"`
+  - `"Type - 1"` → `"Type - 1"`
+  - `"Type 1 - Gynaecology"` → `"Type 1 - Gynaecology"`
+  - `"1. Question"` → `"question"`
+- Ensures uniqueness by appending numbers for duplicates (e.g., `question_1`, `question_2`).
+- IDs are compatible with skip logic and custom expressions.
 
-### 2. Answer Options Handling
-- **Numeric sorting** by "#" column in OptionSets:
-  - Proper numeric order: 1, 2, 3, 10, 20 (not alphabetical)
-  - Supports decimal numbers (e.g., 1.5)
-  - Consistent sorting across form generation
+### 2. **Advanced Answer Option Handling**
+- Numeric sorting by `#` column in OptionSets (e.g., 1, 2, 3, 10, 20).
+- Supports decimal numbers (e.g., 1.5).
+- Handles duplicate column names gracefully.
+- Supports external IDs and answer translations.
 
-### 3. Skip Logic Support
-- Multiple condition formats:
-  ```
-  # Comma-separated values
-  Hide question if [Number of fetuses] !== '1', '2', '3', '4'
-  ```
-  
-  ```
-  # Set notation
-  Hide question if [BCG] !== {'Unknown', 'Not vaccinated'}
-  ```
-  
-  ```
-  # Single value
-  Hide question if [Question] !== 'Value'
-  ```
-- Generates proper logical expressions with OR/AND operators
-- **Maintains compatibility with generated question IDs**:
-  - Skip logic expressions are automatically updated to use modified question IDs, ensuring that skip logic remains functional even when IDs are changed.
+### 3. **Comprehensive Skip Logic Support**
+- Supports single value, comma-separated, and set notation conditions:
+  - `[Question] !== 'Value'`
+  - `[Question] !== '1', '2', '3'`
+  - `[Question] !== {'A', 'B'}`
+- **Multi-select skip logic:**  
+  For questions with `multiCheckbox` or `inlineMultiCheckbox` rendering, skip logic uses `includes`/`!includes`:
+  - Example: `!includes(preoperativeDiagnosis, 'uuid')`
+- Logical operators:
+  - Uses `&&` for multiple conditions.
+  - Automatically updates skip logic to use modified question IDs.
+- Maintains compatibility with generated question IDs, even if IDs are changed for uniqueness.
 
-### 4. Option Set Handling
-- **Numeric sorting** by "#" column of OptionSets tab (1, 2, 3, 10, 20 - not 1, 10, 2, 20, 3)
-- Supports decimal numbers in "#" column (e.g., 1.5 between 1 and 2)
-- Non-numeric values in "#" column are placed at the end
-- Maintains sorted order in generated JSON schema
-- Handles duplicate column names gracefully (uses first occurrence)
-- Supports external IDs and translations
+### 4. **Option Set Handling**
+- Numeric and decimal sorting by `#` column.
+- Non-numeric values are placed at the end.
+- Maintains sorted order in generated JSON.
+- Handles duplicate columns and missing option sets with clear warnings.
 
-### 5. Data Type Support
+### 5. **Data Type & Rendering Support**
+- Supports a wide range of rendering types:
+  - `radio`, `multiCheckbox`, `inlineMultiCheckbox`, `boolean`, `numeric`, `number`, `text`, `textarea`, `markdown`, `workspace-launcher`
 - Decimal number handling:
   - `decimalnumber` rendering: allows decimals (`"disallowDecimals": false`)
-  - `number` rendering: disallows decimals (`"disallowDecimals": true`)
-- Various rendering types:
-  - radio
-  - multiCheckbox
-  - inlineMultiCheckbox
-  - boolean
-  - numeric
-  - text
-  - textarea
-  - markdown
-  - workspace-launcher
+  - `number` rendering: disallows decimals (`"disallowDecimals": true`), sets `min`, `max` (from metadata), and `step: 1`
+- Custom min/max/step for numeric fields, using metadata columns.
 
-### 6. Translation Support
-- Generates translation files for form labels
-- Supports section, question, tooltip, and answer translations
-- Maintains alphabetical order in translation files
+### 6. **Translation Support**
+- Generates translation files for form labels, sections, tooltips, and answers.
+- Maintains alphabetical order in translation files.
 
-## Excel Metadata Format
+---
+
+## 📊 Excel Metadata Format
 
 ### Required Sheets
-1. Form sheets (e.g., F01, F02, etc.)
-   - Contains form structure and questions
-   - Columns:
-     - Question
-     - Label if different
-     - Question ID
-     - External ID
-     - Datatype
-     - Rendering
-     - OptionSet name
-     - Page
-     - Section
-     - Skip logic
-     - Translation columns
 
-2. OptionSets sheet
-   - Contains answer options for questions
-   - Columns:
-     - "#" (for ordering)
-     - OptionSet name
-     - Answers
-     - External ID
+#### 1. **Form Sheets** (e.g., F01, F02, etc.)
+- Columns:
+  - `Question`
+  - `Label if different`
+  - `Question ID`
+  - `External ID`
+  - `Datatype`
+  - `Rendering`
+  - `OptionSet name`
+  - `Page`
+  - `Section`
+  - `Skip logic`
+  - Translation columns (for questions, tooltips, answers)
 
-## Generated Output
+#### 2. **OptionSets Sheet**
+- Columns:
+  - `#` (for ordering)
+  - `OptionSet name`
+  - `Answers`
+  - `External ID`
 
-### Form Schema
+---
+
+## 📝 Generated Output
+
+### Form Schema Example
 ```json
 {
   "name": "Form Name",
@@ -109,7 +95,7 @@ A Python-based tool to generate OpenMRS 3.x form schemas from Excel metadata fil
         "id": "questionId",
         "label": "Question Label",
         "questionOptions": {
-          "rendering": "radio",
+          "rendering": "multiCheckbox",
           "answers": [{
             "label": "Answer Label",
             "concept": "answer-uuid"
@@ -121,7 +107,7 @@ A Python-based tool to generate OpenMRS 3.x form schemas from Excel metadata fil
 }
 ```
 
-### Translation File
+### Translation File Example
 ```json
 {
   "form": "Form Name",
@@ -134,47 +120,52 @@ A Python-based tool to generate OpenMRS 3.x form schemas from Excel metadata fil
 }
 ```
 
-## Usage
+---
 
-1. Prepare Excel metadata file following the required format
-2. Configure column mappings in config.json if needed
+## ⚡ Usage
+
+1. Prepare your Excel metadata file following the required format.
+2. Configure column mappings in `config.json` if needed.
 3. Run the form generator:
    ```python
    from form_generator import generate_form, generate_translation_file
-   
+
    # Initialize option sets
    initialize_option_sets('metadata.xlsx')
-   
+
    # Generate form
    form_data, _, _, _, _ = generate_form('F01', translations_data)
-   
+
    # Generate translations
    translations = generate_translation_file('F01', 'ar', translations_data)
    ```
 
-## Testing
+---
+
+## 🧪 Testing
 
 Run the test suite:
 ```bash
 python -m unittest tests/test_form_generator.py -v
 ```
-
-The test suite covers:
-- Question ID generation
-- Skip logic expressions
-- Option set ordering
-- Decimal number handling
+Test coverage includes:
+- Question ID generation and uniqueness
+- Skip logic (including multi-select logic)
+- Option set ordering and handling
+- Decimal and numeric field handling
 - Translation generation
 
-## Configuration
+---
 
-Use `config.json` to customize:
+## ⚙️ Configuration
+
+Customize via `config.json`:
 - Column mappings
-- Sheet filter prefix
+- Sheet filter prefix (regex)
 - Default values
 - Translation settings
 
-Example config:
+Example:
 ```json
 {
   "columns": {
@@ -186,3 +177,22 @@ Example config:
     "SHEET_FILTER_PREFIX": "F\\d{2}"
   }
 }
+```
+
+---
+
+## ✅ Supported Features Summary
+
+- [x] Unique, robust question ID generation
+- [x] Numeric and decimal option set sorting
+- [x] Multi-select skip logic with `includes`/`!includes`
+- [x] Single, comma, and set notation skip logic
+- [x] All major OpenMRS 3.x rendering types
+- [x] Custom min/max/step for numeric fields
+- [x] Full translation support (questions, answers, tooltips, sections)
+- [x] Handles duplicate columns and missing option sets
+- [x] Comprehensive test suite
+
+---
+
+If you have questions or need help with advanced features, please open an issue or contact the maintainers.

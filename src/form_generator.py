@@ -14,8 +14,11 @@ from dotenv import load_dotenv
 # Load the environment variables
 load_dotenv()
 
+import os
+
 # Load the configuration settings from config.json
-with open('config.json', 'r', encoding='utf-8') as f:
+config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'config.json')
+with open(config_path, 'r', encoding='utf-8') as f:
     config = json.load(f)
 
 # Extract the configuration settings
@@ -533,6 +536,14 @@ def camel_case(text):
         camel_case_text += word.capitalize()
     return camel_case_text
 
+def is_multiselect_question(question_id, questions_answers):
+    for q in questions_answers:
+        if q.get('question_id') == question_id:
+            rendering = q.get('questionOptions', {}).get('rendering', '').lower()
+            if rendering == 'multicheckbox':
+                return True
+    return False
+
 def build_skip_logic_expression(expression: str, questions_answers) -> str:
     """
     Build a skip logic expression from an expression string.
@@ -584,21 +595,24 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
         else:
             question_id = find_question_concept_by_label(questions_answers, original_question_label)
 
-        # Build conditions for each value
+        multi_select = is_multiselect_question(question_id, questions_answers)
+
         conditions = []
         for value in values:
-            # Check if value is a UUID
             if re.match(uuid_pattern, value):
                 cond_answer = value
             else:
                 cond_answer = find_answer_concept_by_label(
                     questions_answers, original_question_label, value
                 )
-            conditions.append(f"{question_id} {operator} '{cond_answer}'")
-
-        # Join conditions with logical OR if operator is !== (different than)
-        # or with logical AND if operator is == (equals)
-        logical_operator = ' || ' if operator == '!==' else ' && '
+            if multi_select:
+                if operator == '!==' or operator == '<>':
+                    conditions.append(f"!includes({question_id}, '{cond_answer}')")
+                else:
+                    conditions.append(f"includes({question_id}, '{cond_answer}')")
+            else:
+                conditions.append(f"{question_id} {operator} '{cond_answer}'")
+        logical_operator = ' && '
         return '(' + logical_operator.join(conditions) + ')'
 
     # Then try to match the multi-value pattern
@@ -618,25 +632,28 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
         else:
             question_id = find_question_concept_by_label(questions_answers, original_question_label)
 
+        multi_select = is_multiselect_question(question_id, questions_answers)
+
         # Parse the values from the set notation
         # Split by comma and remove quotes and whitespace
         values = [v.strip().strip('\'"') for v in values_str.split(',')]
 
-        # Build conditions for each value
         conditions = []
         for value in values:
-            # Check if value is a UUID
             if re.match(uuid_pattern, value):
                 cond_answer = value
             else:
                 cond_answer = find_answer_concept_by_label(
                     questions_answers, original_question_label, value
                 )
-            conditions.append(f"{question_id} {operator} '{cond_answer}'")
-
-        # Join conditions with logical OR if operator is !== (different than)
-        # or with logical AND if operator is == (equals)
-        logical_operator = ' || ' if operator == '!==' else ' && '
+            if multi_select:
+                if operator == '!==' or operator == '<>':
+                    conditions.append(f"!includes({question_id}, '{cond_answer}')")
+                else:
+                    conditions.append(f"includes({question_id}, '{cond_answer}')")
+            else:
+                conditions.append(f"{question_id} {operator} '{cond_answer}'")
+        logical_operator = ' && '
         return '(' + logical_operator.join(conditions) + ')'
 
     # If not a multi-value pattern, try the single value pattern
@@ -656,7 +673,8 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
         else:
             question_id = find_question_concept_by_label(questions_answers, original_question_label)
 
-        # Get answer concept
+        multi_select = is_multiselect_question(question_id, questions_answers)
+
         if re.match(uuid_pattern, original_cond_answer):
             cond_answer = original_cond_answer
         else:
@@ -664,6 +682,11 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
                 questions_answers, original_question_label, original_cond_answer
             )
 
+        if multi_select:
+            if operator == '!==' or operator == '<>':
+                return f"!includes({question_id}, '{cond_answer}')"
+            else:
+                return f"includes({question_id}, '{cond_answer}')"
         return f"{question_id} {operator} '{cond_answer}'"
 
     return "Invalid expression format"
@@ -766,11 +789,14 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
         # Generate ID from "Question" column (not "Label if different") to ensure consistency
         question_id, was_modified, original_label = manage_id(row[QUESTION_COLUMN], all_questions_answers=ALL_QUESTIONS_ANSWERS)
 
+    question_rendering_value = (row[RENDERING_COLUMN].lower() if pd.notnull(row[RENDERING_COLUMN]) else 'text')
+    question_rendering = manage_rendering(question_rendering_value)
+
     # Add the question to ALL_QUESTIONS_ANSWERS early to ensure proper ID tracking
     question_entry = {
         "question_id": question_id,
         "question_label": original_label,
-        "questionOptions": {"answers": []}
+        "questionOptions": {"answers": [], "rendering": question_rendering}
     }
     ALL_QUESTIONS_ANSWERS.append(question_entry)
 
@@ -784,10 +810,6 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
 
     question_required = (str(row[MANDATORY_COLUMN]).lower() == 'true' if MANDATORY_COLUMN in columns and
                         pd.notnull(row[MANDATORY_COLUMN]) else False)
-
-    question_rendering_value = (row[RENDERING_COLUMN].lower() if pd.notnull(row[RENDERING_COLUMN]) else 'text')
-
-    question_rendering = manage_rendering(question_rendering_value)
 
     # Build the question JSON
     question = {
@@ -832,9 +854,14 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
 
     # Handle decimal numbers based on rendering type
     if question_rendering_value == 'decimalnumber':
-        question['disallowDecimals'] = False
+        question['questionOptions']['disallowDecimals'] = False
     elif question_rendering_value == 'number':
-        question['disallowDecimals'] = True
+        question['questionOptions']['disallowDecimals'] = True
+        # Only set min to 0 if not already set from Lower limit
+        if 'min' not in question['questionOptions']:
+            question['questionOptions']['min'] = 0
+        # max is already set from Upper limit if provided
+        question['questionOptions']['step'] = 1
 
     add_translation(question_translations, question_label, question_label_translation)
 
@@ -878,8 +905,8 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
 
     question['questionOptions']['answers'] = []
 
-    # Flag if optionSet is not found
-    if not option_set_found:
+    # Flag if optionSet is not found and option_set_name is not None or empty
+    if not option_set_found and option_set_name:
         question['optionSetNotFound'] = True
         question['optionSetName'] = option_set_name
         print(f"Warning: OptionSet '{option_set_name}' not found for question '{question_label}'")
