@@ -162,7 +162,7 @@ def initialize_option_sets(metadata_file=None):
 
     try:
         option_sets = read_excel_skip_strikeout(filepath=file_to_use, sheet_name='OptionSets', header_row=2)
-        
+
         # Check for duplicate column names and handle them
         if option_sets.columns.duplicated().any():
             print("Warning: Duplicate column names found in OptionSets sheet. Renaming duplicates.")
@@ -171,7 +171,7 @@ def initialize_option_sets(metadata_file=None):
             for dup in cols[cols.duplicated()].unique():
                 cols[cols[cols == dup].index.values.tolist()] = [dup if i == 0 else f'{dup}_{i}' for i in range(sum(cols == dup))]
             option_sets.columns = cols
-            
+
     except Exception as e:
         # Try a direct pandas approach as fallback
         try:
@@ -179,7 +179,7 @@ def initialize_option_sets(metadata_file=None):
             # Try with openpyxl engine first
             option_sets = pd.read_excel(file_to_use, sheet_name='OptionSets', header=1, engine='openpyxl')
             print("Successfully read OptionSets with pandas using openpyxl engine.")
-            
+
             # Check for duplicate column names and handle them
             if option_sets.columns.duplicated().any():
                 print("Warning: Duplicate column names found in OptionSets sheet. Renaming duplicates.")
@@ -187,14 +187,14 @@ def initialize_option_sets(metadata_file=None):
                 for dup in cols[cols.duplicated()].unique():
                     cols[cols[cols == dup].index.values.tolist()] = [dup if i == 0 else f'{dup}_{i}' for i in range(sum(cols == dup))]
                 option_sets.columns = cols
-                
+
         except Exception as pandas_error_openpyxl:
             try:
                 # Try with default engine as fallback
                 print(f"Attempting with default engine...")
                 option_sets = pd.read_excel(file_to_use, sheet_name='OptionSets', header=1)
                 print("Successfully read OptionSets with pandas using default engine.")
-                
+
                 # Check for duplicate column names and handle them
                 if option_sets.columns.duplicated().any():
                     print("Warning: Duplicate column names found in OptionSets sheet. Renaming duplicates.")
@@ -202,7 +202,7 @@ def initialize_option_sets(metadata_file=None):
                     for dup in cols[cols.duplicated()].unique():
                         cols[cols[cols == dup].index.values.tolist()] = [dup if i == 0 else f'{dup}_{i}' for i in range(sum(cols == dup))]
                     option_sets.columns = cols
-                    
+
             except Exception as pandas_error_default:
                 raise Exception(f"Failed to read OptionSets sheet: {str(e)}. "
                                f"Pandas fallback with openpyxl failed: {str(pandas_error_openpyxl)}. "
@@ -232,15 +232,15 @@ def get_options(option_set_name, option_sets_override=None):
     if options_found:
         # Find the 'Order' column
         order_column = next((col for col in filtered_options.columns if str(col) == 'Order'), None)
-        
+
         if order_column is not None:
             try:
                 # Create a copy to avoid modifying the original DataFrame
                 filtered_options = filtered_options.copy()
-                
+
                 # Convert Order column to numeric, handling non-numeric values as NaN
                 filtered_options[order_column] = pd.to_numeric(
-                    filtered_options[order_column], 
+                    filtered_options[order_column],
                     errors='coerce'
                 )
                 # Sort by the Order column numerically, putting NaN values at the end
@@ -258,7 +258,7 @@ def get_options(option_set_name, option_sets_override=None):
         for dup in cols[cols.duplicated()].unique():
             cols[cols[cols == dup].index.values.tolist()] = [dup if i == 0 else f'{dup}_{i}' for i in range(sum(cols == dup))]
         filtered_options.columns = cols
-    
+
     return filtered_options.to_dict(orient='records'), options_found
 
 def find_question_concept_by_label(questions_answers, question_label):
@@ -578,7 +578,7 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
     if comma_match:
         original_question_label = comma_match.group(1)
         operator = comma_match.group(2)
-        
+
         # Extract all quoted values from the matched expression
         values_part = expression[comma_match.start():comma_match.end()]
         values = re.findall(r"'([^']+)'", values_part)
@@ -757,7 +757,7 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
     # Manage values and default values
     # For question label: use "Question" column as default, but use "Label if different" if it's not empty
     original_question_label = (row[LABEL_COLUMN] if LABEL_COLUMN in columns and
-                            pd.notnull(row[LABEL_COLUMN]) and str(row[LABEL_COLUMN]).strip() != '' 
+                            pd.notnull(row[LABEL_COLUMN]) and str(row[LABEL_COLUMN]).strip() != ''
                             else row[QUESTION_COLUMN])
 
     question_label_translation = (
@@ -766,7 +766,7 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
                             )
 
     question_label = manage_label(original_question_label)
-    
+
     # For question ID: use "Question ID" column if provided, otherwise generate from "Question" column in camelCase
     original_question_info = (row[TOOLTIP_COLUMN_NAME] if TOOLTIP_COLUMN_NAME in columns and
                             pd.notnull(row[TOOLTIP_COLUMN_NAME]) else None )
@@ -832,7 +832,9 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
             question_options['max'] = row[UPPER_LIMIT_COLUMN]
 
     if should_render_workspace(question_rendering):
-        workspace_button_label = get_workspace_button_label(question_rendering)
+        workspace_button_label = (row[LABEL_COLUMN] if LABEL_COLUMN in columns and
+                            pd.notnull(row[LABEL_COLUMN]) and str(row[LABEL_COLUMN]).strip() != ''
+                            else get_workspace_button_label(question_rendering))
         question.pop('type')
         question_options = {
             "rendering": "workspace-launcher",
@@ -892,7 +894,7 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
         for original_label, modified_id in ID_MODIFICATIONS.items():
             # Replace the original label in skip logic with the modified ID
             skip_logic = skip_logic.replace(f"[{original_label}]", f"[{modified_id}]")
-        
+
         question['hide'] = {"hideWhenExpression": build_skip_logic_expression(
             skip_logic, ALL_QUESTIONS_ANSWERS
             )}
@@ -930,7 +932,7 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
 
         # Add a note in the question to make it clear this is a placeholder
         question['questionOptions']['placeholder'] = True
- 
+
     # Only process options if the optionSet was found
     if option_set_found:
         # Process answers while preserving the order from sorted_options
@@ -946,15 +948,15 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
                 answer_concept, _, _ = manage_id(opt['Answers'], id_type="answer",
                                                question_id=question_id,
                                                all_questions_answers=ALL_QUESTIONS_ANSWERS)
-        
+
             answer = {
                 "label": manage_label(opt['Answers']),
                 "concept": answer_concept
             }
-            
+
             # Add to answers_list maintaining the order from sorted_options
             answers_list.append(answer)
-            
+
             # Manage Answer labels
             answer_label = manage_label(opt['Answers'])
             translated_answer_label = (row[TRANSLATION_ANSWER_COLUMN] if TRANSLATION_ANSWER_COLUMN in columns and
