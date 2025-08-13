@@ -722,6 +722,20 @@ def get_workspace_button_label(button_label):
         button_label = 'Open Workspace'
     return button_label
 
+def safe_extract_value(value):
+    """
+    Safely extract a value from a pandas Series or scalar value.
+    
+    Args:
+        value: Either a pandas Series or a scalar value
+        
+    Returns:
+        The extracted scalar value
+    """
+    if hasattr(value, 'iloc'):
+        return value.iloc[0]
+    return value
+
 def add_translation(translations, label, translated_string):
     """
     Add a translation to the translations dictionary.
@@ -751,29 +765,29 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
         dict: A question JSON.
     """
 
-    if row.isnull().all() or pd.isnull(row[QUESTION_COLUMN]):
+    if row.isnull().all() or pd.isnull(safe_extract_value(row[QUESTION_COLUMN])):
         return None  # Skip empty rows or rows with empty 'Question'
 
     # Manage values and default values
     # For question label: use "Question" column as default, but use "Label if different" if it's not empty
-    original_question_label = (row[LABEL_COLUMN] if LABEL_COLUMN in columns and
-                            pd.notnull(row[LABEL_COLUMN]) and str(row[LABEL_COLUMN]).strip() != ''
-                            else row[QUESTION_COLUMN])
+    original_question_label = (safe_extract_value(row[LABEL_COLUMN]) if LABEL_COLUMN in columns and
+                            pd.notnull(safe_extract_value(row[LABEL_COLUMN])) and str(safe_extract_value(row[LABEL_COLUMN])).strip() != ''
+                            else safe_extract_value(row[QUESTION_COLUMN]))
 
     question_label_translation = (
-        row[TRANSLATION_QUESTION_COLUMN].replace('"', '').replace("'", '').replace('\\', '/') if TRANSLATION_QUESTION_COLUMN in columns and
-                            pd.notnull(row[TRANSLATION_QUESTION_COLUMN]) else None
+        safe_extract_value(row[TRANSLATION_QUESTION_COLUMN]).replace('"', '').replace("'", '').replace('\\', '/') if TRANSLATION_QUESTION_COLUMN in columns and
+                            pd.notnull(safe_extract_value(row[TRANSLATION_QUESTION_COLUMN])) else None
                             )
 
     question_label = manage_label(original_question_label)
 
     # For question ID: use "Question ID" column if provided, otherwise generate from "Question" column in camelCase
-    original_question_info = (row[TOOLTIP_COLUMN_NAME] if TOOLTIP_COLUMN_NAME in columns and
-                            pd.notnull(row[TOOLTIP_COLUMN_NAME]) else None )
+    original_question_info = (safe_extract_value(row[TOOLTIP_COLUMN_NAME]) if TOOLTIP_COLUMN_NAME in columns and
+                            pd.notnull(safe_extract_value(row[TOOLTIP_COLUMN_NAME])) else None )
     question_info = manage_label(original_question_info)
 
-    if OPTION_SET_COLUMN in columns and pd.notnull(row[OPTION_SET_COLUMN]):
-        option_set_name = row[OPTION_SET_COLUMN]
+    if OPTION_SET_COLUMN in columns and pd.notnull(safe_extract_value(row[OPTION_SET_COLUMN])):
+        option_set_name = safe_extract_value(row[OPTION_SET_COLUMN])
         options, option_set_found = get_options(option_set_name, option_sets_override)
         sorted_options = options
     else:
@@ -783,13 +797,13 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
         sorted_options = []
 
     # For question ID: use "Question ID" column if provided, otherwise generate from "Question" column in camelCase
-    if QUESTION_ID_COLUMN in columns and pd.notnull(row[QUESTION_ID_COLUMN]):
-        question_id, was_modified, original_label = manage_id(row[QUESTION_ID_COLUMN], all_questions_answers=ALL_QUESTIONS_ANSWERS)
+    if QUESTION_ID_COLUMN in columns and pd.notnull(safe_extract_value(row[QUESTION_ID_COLUMN])):
+        question_id, was_modified, original_label = manage_id(safe_extract_value(row[QUESTION_ID_COLUMN]), all_questions_answers=ALL_QUESTIONS_ANSWERS)
     else:
         # Generate ID from "Question" column (not "Label if different") to ensure consistency
-        question_id, was_modified, original_label = manage_id(row[QUESTION_COLUMN], all_questions_answers=ALL_QUESTIONS_ANSWERS)
+        question_id, was_modified, original_label = manage_id(safe_extract_value(row[QUESTION_COLUMN]), all_questions_answers=ALL_QUESTIONS_ANSWERS)
 
-    question_rendering_value = (row[RENDERING_COLUMN].lower() if pd.notnull(row[RENDERING_COLUMN]) else 'text')
+    question_rendering_value = (safe_extract_value(row[RENDERING_COLUMN]).lower() if pd.notnull(safe_extract_value(row[RENDERING_COLUMN])) else 'text')
     question_rendering = manage_rendering(question_rendering_value)
 
     # Add the question to ALL_QUESTIONS_ANSWERS early to ensure proper ID tracking
@@ -800,16 +814,16 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
     }
     ALL_QUESTIONS_ANSWERS.append(question_entry)
 
-    question_concept_id = (row[EXTERNAL_ID_COLUMN] if EXTERNAL_ID_COLUMN in columns and
-                        pd.notnull(row[EXTERNAL_ID_COLUMN]) else question_id)
+    question_concept_id = (safe_extract_value(row[EXTERNAL_ID_COLUMN]) if EXTERNAL_ID_COLUMN in columns and
+                        pd.notnull(safe_extract_value(row[EXTERNAL_ID_COLUMN])) else question_id)
 
-    question_datatype = (row[DATATYPE_COLUMN].lower() if pd.notnull(row[DATATYPE_COLUMN]) else 'radio')
+    question_datatype = (safe_extract_value(row[DATATYPE_COLUMN]).lower() if pd.notnull(safe_extract_value(row[DATATYPE_COLUMN])) else 'radio')
 
-    validation_format = (row[VALIDATION_COLUMN] if VALIDATION_COLUMN in columns and
-                        pd.notnull(row[VALIDATION_COLUMN]) else '')
+    validation_format = (safe_extract_value(row[VALIDATION_COLUMN]) if VALIDATION_COLUMN in columns and
+                        pd.notnull(safe_extract_value(row[VALIDATION_COLUMN])) else '')
 
-    question_required = (str(row[MANDATORY_COLUMN]).lower() == 'true' if MANDATORY_COLUMN in columns and
-                        pd.notnull(row[MANDATORY_COLUMN]) else False)
+    question_required = (str(safe_extract_value(row[MANDATORY_COLUMN])).lower() == 'true' if MANDATORY_COLUMN in columns and
+                        pd.notnull(safe_extract_value(row[MANDATORY_COLUMN])) else False)
 
     # Build the question JSON
     question = {
@@ -826,14 +840,14 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
 
     # Add min/max values if rendering is numeric/number
     if question_rendering in ['numeric', 'number']:
-        if LOWER_LIMIT_COLUMN in columns and pd.notnull(row[LOWER_LIMIT_COLUMN]):
-            question_options['min'] = row[LOWER_LIMIT_COLUMN]
-        if UPPER_LIMIT_COLUMN in columns and pd.notnull(row[UPPER_LIMIT_COLUMN]):
-            question_options['max'] = row[UPPER_LIMIT_COLUMN]
+        if LOWER_LIMIT_COLUMN in columns and pd.notnull(safe_extract_value(row[LOWER_LIMIT_COLUMN])):
+            question_options['min'] = safe_extract_value(row[LOWER_LIMIT_COLUMN])
+        if UPPER_LIMIT_COLUMN in columns and pd.notnull(safe_extract_value(row[UPPER_LIMIT_COLUMN])):
+            question_options['max'] = safe_extract_value(row[UPPER_LIMIT_COLUMN])
 
     if should_render_workspace(question_rendering):
-        workspace_button_label = (row[LABEL_COLUMN] if LABEL_COLUMN in columns and
-                            pd.notnull(row[LABEL_COLUMN]) and str(row[LABEL_COLUMN]).strip() != ''
+        workspace_button_label = (safe_extract_value(row[LABEL_COLUMN]) if LABEL_COLUMN in columns and
+                            pd.notnull(safe_extract_value(row[LABEL_COLUMN])) and str(safe_extract_value(row[LABEL_COLUMN])).strip() != ''
                             else get_workspace_button_label(question_rendering))
         question.pop('type')
         question_options = {
@@ -871,26 +885,26 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
     if pd.notnull(question_validators):
         question['validators'] = question_validators
 
-    if DEFAULT_VALUE_COLUMN in columns and pd.notnull(row[DEFAULT_VALUE_COLUMN]):
-        question['default'] = row[DEFAULT_VALUE_COLUMN]
+    if DEFAULT_VALUE_COLUMN in columns and pd.notnull(safe_extract_value(row[DEFAULT_VALUE_COLUMN])):
+        question['default'] = safe_extract_value(row[DEFAULT_VALUE_COLUMN])
 
-    if TOOLTIP_COLUMN_NAME in columns and pd.notnull(row[TOOLTIP_COLUMN_NAME]):
+    if TOOLTIP_COLUMN_NAME in columns and pd.notnull(safe_extract_value(row[TOOLTIP_COLUMN_NAME])):
         question['questionInfo'] = question_info
         question_info_translation = (
-            row[TRANSLATION_TOOLTIP_COLUMN].replace('"', '').replace("'", '').replace('\\', '/')
+            safe_extract_value(row[TRANSLATION_TOOLTIP_COLUMN]).replace('"', '').replace("'", '').replace('\\', '/')
                 if (
                     TRANSLATION_TOOLTIP_COLUMN in columns and
-                    pd.notnull(row[TRANSLATION_TOOLTIP_COLUMN])
+                    pd.notnull(safe_extract_value(row[TRANSLATION_TOOLTIP_COLUMN]))
                 ) else None
         )
         add_translation(question_translations, question_info, question_info_translation)
 
-    if CALCULATION_COLUMN in columns and pd.notnull(row[CALCULATION_COLUMN]):
-        question['questionOptions']['calculate'] = {"calculateExpression": row[CALCULATION_COLUMN]}
+    if CALCULATION_COLUMN in columns and pd.notnull(safe_extract_value(row[CALCULATION_COLUMN])):
+        question['questionOptions']['calculate'] = {"calculateExpression": safe_extract_value(row[CALCULATION_COLUMN])}
 
-    if SKIP_LOGIC_COLUMN in columns and pd.notnull(row[SKIP_LOGIC_COLUMN]):
+    if SKIP_LOGIC_COLUMN in columns and pd.notnull(safe_extract_value(row[SKIP_LOGIC_COLUMN])):
         # Update skip logic expression with modified IDs
-        skip_logic = row[SKIP_LOGIC_COLUMN]
+        skip_logic = safe_extract_value(row[SKIP_LOGIC_COLUMN])
         for original_label, modified_id in ID_MODIFICATIONS.items():
             # Replace the original label in skip logic with the modified ID
             skip_logic = skip_logic.replace(f"[{original_label}]", f"[{modified_id}]")
@@ -943,7 +957,7 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
             if opt['External ID'] == '#N/A':
                 answer_concept, _, _ = manage_id(opt['Answers'])
             elif EXTERNAL_ID_COLUMN in columns and pd.notnull(opt[EXTERNAL_ID_COLUMN]):
-                answer_concept = opt['External ID']
+                answer_concept = opt[EXTERNAL_ID_COLUMN]
             else:
                 answer_concept, _, _ = manage_id(opt['Answers'], id_type="answer",
                                                question_id=question_id,
@@ -959,8 +973,8 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
 
             # Manage Answer labels
             answer_label = manage_label(opt['Answers'])
-            translated_answer_label = (row[TRANSLATION_ANSWER_COLUMN] if TRANSLATION_ANSWER_COLUMN in columns and
-                            pd.notnull(row[TRANSLATION_ANSWER_COLUMN]) else None )
+            translated_answer_label = (safe_extract_value(row[TRANSLATION_ANSWER_COLUMN]) if TRANSLATION_ANSWER_COLUMN in columns and
+                            pd.notnull(safe_extract_value(row[TRANSLATION_ANSWER_COLUMN])) else None )
             add_translation(question_translations, answer_label, translated_answer_label)
 
         # Set the answers in the question options, preserving the order
@@ -1074,7 +1088,7 @@ def generate_form(sheet_name, form_translations, metadata_file=None):
 
             questions = [generate_question(row, columns, form_translations, missing_option_sets)
                         for _, row in section_df.iterrows()
-                        if not row.isnull().all() and pd.notnull(row[QUESTION_COLUMN])]
+                        if not row.isnull().all() and pd.notnull(safe_extract_value(row[QUESTION_COLUMN]))]
 
             questions = [q for q in questions if q is not None]
 
