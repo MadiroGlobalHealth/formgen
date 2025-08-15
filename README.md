@@ -16,7 +16,7 @@ A Python-based tool to generate OpenMRS 3.x form schemas from Excel metadata fil
 - IDs are compatible with skip logic and custom expressions.
 
 ### 2. **Advanced Answer Option Handling**
-- Numeric sorting by `#` column in OptionSets (e.g., 1, 2, 3, 10, 20).
+- Numeric sorting by `Order` column in OptionSets (e.g., 1, 2, 3, 10, 20).
 - Supports decimal numbers (e.g., 1.5).
 - Handles duplicate column names gracefully.
 - Supports external IDs and answer translations.
