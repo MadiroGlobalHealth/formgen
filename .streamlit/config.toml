@@ -16,7 +16,6 @@ enableXsrfProtection = true
 
 [browser]
 gatherUsageStats = false
-showErrorDetails = true
 
 [theme]
 primaryColor = "#1f77b4"
@@ -25,9 +24,7 @@ secondaryBackgroundColor = "#f0f2f6"
 textColor = "#262730"
 
 [client]
-caching = true
-showErrorDetails = true
-displayEnabled = true
+showErrorDetails = "full"
 
 [global]
 # Suppress deprecation warnings for cleaner logs
