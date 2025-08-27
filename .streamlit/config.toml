@@ -1,0 +1,34 @@
+[server]
+# Streamlit Cloud configuration for Excel processing app
+maxUploadSize = 50
+maxMessageSize = 200
+
+# Memory management
+runOnSave = false
+allowRunOnSave = false
+
+# Enable file watcher for local development only
+fileWatcherType = "none"
+
+# Performance settings for cloud deployment
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
+showErrorDetails = true
+
+[theme]
+primaryColor = "#1f77b4"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0f2f6"
+textColor = "#262730"
+
+[client]
+caching = true
+showErrorDetails = true
+displayEnabled = true
+
+[global]
+# Suppress deprecation warnings for cleaner logs
+suppressDeprecationWarnings = true

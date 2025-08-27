@@ -10,7 +10,17 @@ import zipfile
 import sys
 import re
 import subprocess
+import tempfile
+import logging
+from typing import Optional, Tuple
 from dotenv import load_dotenv
+
+# Configure logging for debugging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Function to get the current git commit hash
 def get_git_commit():
@@ -118,27 +128,126 @@ def get_download_link(filepath, filename):
         href = f'<a href="data:file/json;base64,{b64}" download="{filename}">Download {filename}</a>'
         return href
 
+def safe_file_handler(uploaded_file) -> Tuple[Optional[str], str]:
+    """
+    Safely handle uploaded file with proper error handling for Streamlit Cloud.
+    
+    Args:
+        uploaded_file: Streamlit uploaded file object
+        
+    Returns:
+        Tuple[Optional[str], str]: (temp_file_path, error_message)
+    """
+    try:
+        # Check file size (limit to 50MB for safety)
+        file_size = len(uploaded_file.getvalue())
+        logger.info(f"Processing file: {uploaded_file.name}, size: {file_size / (1024*1024):.2f} MB")
+        
+        if file_size > 50 * 1024 * 1024:  # 50MB limit
+            return None, "File size exceeds 50MB limit. Please use a smaller file."
+        
+        # Use tempfile for cross-platform compatibility
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx', prefix='formgen_') as tmp_file:
+            tmp_file.write(uploaded_file.getvalue())
+            temp_path = tmp_file.name
+            
+        # Validate file immediately after creation
+        try:
+            wb = openpyxl.load_workbook(temp_path, read_only=True, data_only=True)
+            try:
+                sheet_names = wb.sheetnames
+                logger.info(f"Successfully validated Excel file with {len(wb.sheetnames)} sheets")
+            finally:
+                wb.close()
+        except Exception as e:
+            # Clean up temp file if validation fails
+            try:
+                os.unlink(temp_path)
+            except:
+                pass
+            return None, f"Invalid Excel file: {str(e)}"
+            
+        return temp_path, ""
+        
+    except MemoryError:
+        return None, "File too large to process. Please reduce file size or split into smaller files."
+    except Exception as e:
+        logger.error(f"Error handling file: {str(e)}")
+        return None, f"Error processing file: {str(e)}"
+
+def cleanup_temp_file(file_path: Optional[str]) -> None:
+    """
+    Safely cleanup temporary files.
+    
+    Args:
+        file_path: Path to temporary file to cleanup
+    """
+    if file_path and os.path.exists(file_path):
+        try:
+            os.unlink(file_path)
+            logger.info(f"Cleaned up temporary file: {file_path}")
+        except Exception as e:
+            logger.warning(f"Could not clean up temp file {file_path}: {str(e)}")
+
 def generate_forms_from_sheets(metadata_file, selected_sheets):
     """
     Generate forms from selected sheets
     """
     try:
-        # Validate the Excel file first
+        # Enhanced file validation with better error reporting
         try:
-            openpyxl.load_workbook(metadata_file, read_only=True)
+            logger.info(f"Validating Excel file: {metadata_file}")
+            wb = openpyxl.load_workbook(metadata_file, read_only=True, data_only=True)
+            sheet_count = len(wb.sheetnames)
+            wb.close()
+            logger.info(f"Excel file validated successfully with {sheet_count} sheets")
+        except zipfile.BadZipFile:
+            st.error("❌ Invalid Excel file format - file appears to be corrupted or not a valid Excel file.")
+            st.info("💡 **Solutions:**")
+            st.info("• Save your file as 'Excel Workbook (.xlsx)' format")
+            st.info("• Try opening and re-saving the file in Excel")
+            st.info("• Ensure the file wasn't corrupted during upload")
+            return []
+        except FileNotFoundError:
+            st.error("❌ File not found - temporary file may have been cleaned up.")
+            st.info("💡 Please try uploading the file again.")
+            return []
+        except MemoryError:
+            st.error("❌ File too large to process - insufficient memory.")
+            st.info("💡 **Solutions:**")
+            st.info("• Try reducing the file size by removing unnecessary data")
+            st.info("• Split large files into smaller ones")
+            st.info("• Remove unused sheets from the Excel file")
+            return []
+        except PermissionError:
+            st.error("❌ Permission denied - cannot access the file.")
+            st.info("💡 Please try uploading the file again.")
+            return []
         except Exception as e:
-            st.error(f"Invalid Excel file format: {str(e)}")
-            st.info("Please ensure your file is in .xlsx, .xlsm, .xltx, or .xltm format and not corrupted.")
-            st.info("If the file was created or saved with a newer version of Excel, try saving it as 'Excel Workbook (.xlsx)' using compatibility mode.")
+            st.error(f"❌ Excel file validation failed: {str(e)}")
+            st.info("💡 **Troubleshooting:**")
+            st.info("• Ensure file is in .xlsx, .xlsm, .xltx, or .xltm format")
+            st.info("• Check that the file is not password protected")
+            st.info("• Try saving with Excel compatibility mode if created in newer Excel versions")
+            logger.error(f"Excel validation failed: {str(e)}")
             return []
 
         # Set the metadata filepath environment variable for the form_generator module
         os.environ['METADATA_FILEPATH'] = metadata_file
+        logger.info(f"Set METADATA_FILEPATH to: {metadata_file}")
 
-        # Initialize option sets if not already done
+        # Initialize option sets with enhanced error handling
         if not st.session_state.option_sets_initialized:
-            initialize_option_sets(metadata_file)
-            st.session_state.option_sets_initialized = True
+            try:
+                logger.info("Initializing option sets...")
+                initialize_option_sets(metadata_file)
+                st.session_state.option_sets_initialized = True
+                logger.info("Option sets initialized successfully")
+            except Exception as e:
+                st.error(f"❌ Failed to initialize option sets: {str(e)}")
+                st.info("💡 Please ensure your Excel file has an 'OptionSets' sheet with the correct format.")
+                logger.error(f"Option sets initialization failed: {str(e)}")
+                return []
 
         # Load current configuration to ensure it's used
         config = load_config()
@@ -158,16 +267,42 @@ def generate_forms_from_sheets(metadata_file, selected_sheets):
                 import time
                 start_time = time.time()
 
-                # Generate form and translations, explicitly passing the metadata file path
-                form, _, total_questions, total_answers, missing_option_sets = generate_form(sheet, translations_data, metadata_file)
-                translations = generate_translation_file(sheet, 'ar', translations_data)
+                # Generate form and translations with enhanced error handling
+                logger.info(f"Generating form for sheet: {sheet}")
+                try:
+                    form, _, total_questions, total_answers, missing_option_sets = generate_form(sheet, translations_data, metadata_file)
+                    translations = generate_translation_file(sheet, 'ar', translations_data)
+                    logger.info(f"Successfully generated form for {sheet} - {total_questions} questions, {total_answers} answers")
+                except MemoryError:
+                    st.error(f"❌ Insufficient memory to process sheet '{sheet}'. Try reducing the sheet size.")
+                    continue
+                except KeyError as e:
+                    st.error(f"❌ Missing required column in sheet '{sheet}': {str(e)}")
+                    st.info("💡 Please check your column mappings in the Configuration page.")
+                    continue
+                except Exception as e:
+                    st.error(f"❌ Error generating form for sheet '{sheet}': {str(e)}")
+                    logger.error(f"Form generation failed for {sheet}: {str(e)}")
+                    continue
 
                 # End timing
                 generation_time = time.time() - start_time
 
-                # Create output directory if it doesn't exist
-                output_dir = 'generated_forms'
-                os.makedirs(output_dir, exist_ok=True)
+                # Use temp directory or ensure output directory exists and is writable
+                try:
+                    output_dir = 'generated_forms'
+                    os.makedirs(output_dir, exist_ok=True)
+                    # Test write permissions
+                    test_file = os.path.join(output_dir, '.test_write')
+                    with open(test_file, 'w') as f:
+                        f.write('test')
+                    os.remove(test_file)
+                    logger.info(f"Output directory ready: {output_dir}")
+                except (PermissionError, OSError) as e:
+                    # Fallback to temp directory if can't write to generated_forms
+                    output_dir = tempfile.mkdtemp(prefix='formgen_output_')
+                    logger.warning(f"Using temporary output directory: {output_dir}")
+                    st.warning(f"⚠️ Using temporary directory for outputs: {os.path.basename(output_dir)}")
 
                 # Generate filenames
                 form_filename = f"{sheet.replace(' ', '_')}.json"
@@ -213,13 +348,28 @@ def generate_forms_from_sheets(metadata_file, selected_sheets):
 
                 st.success(f"Successfully generated form for {sheet}")
 
+            except MemoryError:
+                st.error(f"❌ Out of memory while processing sheet '{sheet}'. Please reduce file size.")
+                logger.error(f"Memory error processing sheet {sheet}")
+                st.info(f"⏭️ Skipping sheet '{sheet}' and continuing with the next one.")
             except Exception as e:
-                st.error(f"Error generating form for sheet {sheet}: {str(e)}")
-                st.info(f"Skipping sheet {sheet} and continuing with the next one.")
+                st.error(f"❌ Error generating form for sheet '{sheet}': {str(e)}")
+                logger.error(f"Error processing sheet {sheet}: {str(e)}")
+                st.info(f"⏭️ Skipping sheet '{sheet}' and continuing with the next one.")
 
         return generated_forms
+    except MemoryError:
+        st.error("❌ Out of memory error. The file is too large to process.")
+        st.info("💡 **Solutions:**")
+        st.info("• Reduce the file size by removing unnecessary data")
+        st.info("• Process fewer sheets at once")
+        st.info("• Split large files into smaller ones")
+        logger.error("Memory error during form generation")
+        return []
     except Exception as e:
-        st.error(f"An unexpected error occurred: {str(e)}")
+        st.error(f"❌ An unexpected error occurred: {str(e)}")
+        logger.error(f"Unexpected error during form generation: {str(e)}")
+        st.info("💡 Please check the file format and try again. If the issue persists, try with a smaller file.")
         return []
 
 def show_configuration_page():
@@ -523,55 +673,67 @@ def show_home_page():
     )
 
     if uploaded_file is not None:
-
-        # Save the uploaded file
-        with st.spinner('Processing file... Please wait.'):
-            # Create uploads directory if it doesn't exist
-            os.makedirs('uploads', exist_ok=True)
-
-            temp_file_path = os.path.join('uploads', uploaded_file.name)
-
-            # Save the file
-            with open(temp_file_path, 'wb') as f:
-                f.write(uploaded_file.getbuffer())
-
-            st.success(f"File saved successfully at {temp_file_path}")
-
-            # Validate the file format
-            try:
-                wb = openpyxl.load_workbook(temp_file_path, read_only=True, data_only=True)
-                sheet_names = wb.sheetnames
-                wb.close()
-            except zipfile.BadZipFile:
-                st.error("The uploaded file appears to be corrupted or not a valid Excel file.")
-                st.info("Please try re-saving your Excel file or creating a new one. Make sure to save it in .xlsx format.")
+        # Use safe file handler for robust file processing
+        with st.spinner('🔄 Processing file... Please wait.'):
+            temp_file_path, error_message = safe_file_handler(uploaded_file)
+            
+            if error_message:
+                st.error(f"❌ {error_message}")
                 st.stop()
-            except Exception as e:
-                st.error(f"Error opening Excel file: {str(e)}")
-                st.info("Please ensure your file is in a supported Excel format (.xlsx, .xlsm, .xltx, .xltm) and not corrupted.")
+                
+            if not temp_file_path:
+                st.error("❌ Failed to process uploaded file.")
                 st.stop()
+                
+            st.success(f"✅ File processed successfully: {uploaded_file.name}")
+            
+            # Store temp file path for cleanup later
+            if 'temp_files_to_cleanup' not in st.session_state:
+                st.session_state.temp_files_to_cleanup = []
+            st.session_state.temp_files_to_cleanup.append(temp_file_path)
 
-        # Initialize option sets from the uploaded file only if not already initialized
+        # Initialize option sets with enhanced error handling
         if not st.session_state.option_sets_initialized:
-            with st.spinner('Initializing option sets... Please wait.'):
+            with st.spinner('🔄 Initializing option sets... Please wait.'):
                 try:
                     initialize_option_sets(temp_file_path)
                     st.session_state.option_sets_initialized = True
+                    st.success("✅ Option sets initialized successfully")
                 except zipfile.BadZipFile:
-                    st.error("The uploaded file appears to be corrupted or not a valid Excel file.")
-                    st.info("Please try re-saving your Excel file or creating a new one. Make sure to save it in .xlsx format.")
+                    st.error("❌ The uploaded file appears to be corrupted or not a valid Excel file.")
+                    st.info("💡 Please try re-saving your Excel file or creating a new one. Make sure to save it in .xlsx format.")
+                    cleanup_temp_file(temp_file_path)
+                    st.stop()
+                except KeyError:
+                    st.error("❌ Missing 'OptionSets' sheet in the Excel file.")
+                    st.info("💡 Please ensure your Excel file contains a sheet named 'OptionSets' with the expected format.")
+                    cleanup_temp_file(temp_file_path)
+                    st.stop()
+                except MemoryError:
+                    st.error("❌ File too large to process - insufficient memory for option sets.")
+                    st.info("💡 Try reducing the size of your OptionSets sheet or the overall file size.")
+                    cleanup_temp_file(temp_file_path)
                     st.stop()
                 except Exception as e:
-                    st.error(f"Error initializing option sets: {str(e)}")
-                    st.info("Please ensure your Excel file has a sheet named 'OptionSets' with the expected format.")
+                    st.error(f"❌ Error initializing option sets: {str(e)}")
+                    st.info("💡 Please ensure your Excel file has a sheet named 'OptionSets' with the expected format.")
+                    logger.error(f"Option sets initialization failed: {str(e)}")
+                    cleanup_temp_file(temp_file_path)
                     st.stop()
 
         # Update environment variable for metadata file path
         os.environ['METADATA_FILEPATH'] = temp_file_path
 
-        # Extract sheet names and filter based on the configured sheet filter prefix
-        wb = openpyxl.load_workbook(temp_file_path, read_only=True)
-        all_sheet_names = wb.sheetnames
+        # Extract sheet names with enhanced error handling
+        try:
+            wb = openpyxl.load_workbook(temp_file_path, read_only=True, data_only=True)
+            all_sheet_names = wb.sheetnames
+            wb.close()
+            logger.info(f"Retrieved {len(all_sheet_names)} sheet names from Excel file")
+        except Exception as e:
+            st.error(f"❌ Error reading sheet names: {str(e)}")
+            cleanup_temp_file(temp_file_path)
+            st.stop()
 
         # Get the configured sheet filter prefix from settings
         config = load_config()
@@ -617,11 +779,31 @@ def show_home_page():
                 # Only generate forms if they haven't been generated yet or if the button was just clicked
                 if generate_button and not st.session_state.forms_generated:
                     # Create a full-page spinner overlay
-                    with st.spinner('Generating forms... Please wait, this may take a few minutes.'):
+                    with st.spinner('🔄 Generating forms... Please wait, this may take a few minutes.'):
                         st.session_state.temp_file_path = temp_file_path
                         st.session_state.selected_sheets = selected_sheets
-                        st.session_state.generated_forms = generate_forms_from_sheets(temp_file_path, selected_sheets)
-                        st.session_state.forms_generated = True
+                        
+                        # Generate forms with progress tracking
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
+                        
+                        try:
+                            st.session_state.generated_forms = generate_forms_from_sheets(temp_file_path, selected_sheets)
+                            progress_bar.progress(100)
+                            status_text.text("✅ Forms generated successfully!")
+                            st.session_state.forms_generated = True
+                            
+                        except Exception as e:
+                            st.error(f"❌ Error during form generation: {str(e)}")
+                            logger.error(f"Form generation failed: {str(e)}")
+                            progress_bar.empty()
+                            status_text.empty()
+                        finally:
+                            # Clean up progress indicators
+                            import time
+                            time.sleep(1)
+                            progress_bar.empty()
+                            status_text.empty()
 
                 # Display results using the stored generated forms
                 st.subheader("Generated Forms")
@@ -699,5 +881,19 @@ def show_home_page():
 
                     st.markdown("---")  # Add a separator between forms
 
+def cleanup_session_temp_files():
+    """Clean up temporary files stored in session state."""
+    if 'temp_files_to_cleanup' in st.session_state:
+        for temp_file in st.session_state.temp_files_to_cleanup:
+            cleanup_temp_file(temp_file)
+        st.session_state.temp_files_to_cleanup = []
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.error(f"Application error: {str(e)}")
+        st.error(f"❌ Application error: {str(e)}")
+    finally:
+        # Clean up any temporary files on exit
+        cleanup_session_temp_files()

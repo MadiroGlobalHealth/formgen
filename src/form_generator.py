@@ -71,17 +71,27 @@ def read_excel_skip_strikeout(filepath, sheet_name=0, header_row=1):
     :param header_row: Which row in Excel is the header (1-based index)
     :return: Pandas DataFrame with rows containing strikethrough removed
     """
-    print(f"Reading sheet '{sheet_name}' from file: '{filepath}'")
+    logger.info(f"Reading sheet '{sheet_name}' from file: '{filepath}'")
 
     if not filepath or filepath.strip() == '':
         raise ValueError("Empty file path provided. Please check your METADATA_FILEPATH environment variable.")
 
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"Excel file not found: '{filepath}'")
+    
+    # Check file size before processing
+    try:
+        file_size = os.path.getsize(filepath)
+        logger.info(f"Processing file size: {file_size / (1024*1024):.2f} MB")
+        
+        if file_size > 100 * 1024 * 1024:  # 100MB warning
+            logger.warning(f"Large file detected ({file_size / (1024*1024):.2f} MB). Processing may be slow.")
+    except OSError:
+        logger.warning("Could not determine file size")
 
     try:
-        # Load workbook (use data_only=True if you only need computed values)
-        wb = openpyxl.load_workbook(filepath, data_only=True)
+        # Load workbook with memory optimization
+        wb = openpyxl.load_workbook(filepath, read_only=True, data_only=True, keep_links=False)
         ws = wb[sheet_name]
 
         # Convert 1-based to 0-based index for Python lists
