@@ -689,7 +689,8 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
                 return f"includes({question_id}, '{cond_answer}')"
         return f"{question_id} {operator} '{cond_answer}'"
 
-    return "Invalid expression format"
+    print(f"DEBUG: Unmatched skip logic expression: '{expression}'")
+    return f"Invalid expression format: '{expression}'"
 
 
 def should_render_workspace(question_rendering):
@@ -905,13 +906,18 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
     if SKIP_LOGIC_COLUMN in columns and pd.notnull(safe_extract_value(row[SKIP_LOGIC_COLUMN])):
         # Update skip logic expression with modified IDs
         skip_logic = safe_extract_value(row[SKIP_LOGIC_COLUMN])
-        for original_label, modified_id in ID_MODIFICATIONS.items():
-            # Replace the original label in skip logic with the modified ID
-            skip_logic = skip_logic.replace(f"[{original_label}]", f"[{modified_id}]")
+        
+        # Skip if skip logic is empty or just whitespace
+        if not skip_logic or str(skip_logic).strip() == "":
+            pass
+        else:
+            for original_label, modified_id in ID_MODIFICATIONS.items():
+                # Replace the original label in skip logic with the modified ID
+                skip_logic = skip_logic.replace(f"[{original_label}]", f"[{modified_id}]")
 
-        question['hide'] = {"hideWhenExpression": build_skip_logic_expression(
-            skip_logic, ALL_QUESTIONS_ANSWERS
-            )}
+            hide_expression = build_skip_logic_expression(skip_logic, ALL_QUESTIONS_ANSWERS)
+            if not hide_expression.startswith("Invalid expression format"):
+                question['hide'] = {"hideWhenExpression": hide_expression}
 
     # Add warning if ID was modified
     if was_modified:
