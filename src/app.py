@@ -470,9 +470,10 @@ def main():
     # Navigation menu
     st.sidebar.title("Navigation")
     page = st.sidebar.radio(
-        "",
+        "Select page",
         ["O3 Form Generator", "Configuration"],
-        key="navigation"
+        key="navigation",
+        label_visibility="hidden"
     )
 
     # Close the content div and start the footer
@@ -490,7 +491,7 @@ def main():
     commit_date_unix = get_git_commit_date()
     try:
         import datetime
-        commit_date_str = datetime.datetime.utcfromtimestamp(int(commit_date_unix)).strftime('%Y-%m-%d')
+        commit_date_str = datetime.datetime.fromtimestamp(int(commit_date_unix), datetime.UTC).strftime('%Y-%m-%d')
     except Exception:
         commit_date_str = "unknown"
 
