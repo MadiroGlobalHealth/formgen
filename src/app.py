@@ -270,7 +270,7 @@ def generate_forms_from_sheets(metadata_file, selected_sheets):
                 # Generate form and translations with enhanced error handling
                 logger.info(f"Generating form for sheet: {sheet}")
                 try:
-                    form, _, total_questions, total_answers, missing_option_sets = generate_form(sheet, translations_data, metadata_file)
+                    form, _, total_questions, total_answers, missing_option_sets, skip_logic_issues = generate_form(sheet, translations_data, metadata_file)
                     translations = generate_translation_file(sheet, 'ar', translations_data)
                     logger.info(f"Successfully generated form for {sheet} - {total_questions} questions, {total_answers} answers")
                 except MemoryError:
@@ -343,7 +343,8 @@ def generate_forms_from_sheets(metadata_file, selected_sheets):
                     'translation_size': translation_size,
                     'num_pages': num_pages,
                     'num_sections': num_sections,
-                    'missing_option_sets': missing_option_sets
+                    'missing_option_sets': missing_option_sets,
+                    'skip_logic_issues': skip_logic_issues
                 })
 
                 st.success(f"Successfully generated form for {sheet}")
@@ -832,6 +833,52 @@ def show_home_page():
                                 st.markdown(f"**Question Label:** {missing['question_label']}")
                                 st.markdown(f"**Missing OptionSet:** {missing['optionSet_name']}")
                                 st.markdown("---")
+
+                    # Display skip logic validation issues if any
+                    skip_logic_issues = form.get('skip_logic_issues', [])
+                    if skip_logic_issues:
+                        # Count issues by status
+                        invalid_issues = [issue for issue in skip_logic_issues if issue['status'] == 'invalid']
+                        suspect_issues = [issue for issue in skip_logic_issues if issue['status'] == 'suspect']
+                        empty_issues = [issue for issue in skip_logic_issues if issue['status'] == 'empty']
+                        
+                        # Show summary
+                        total_issues = len(invalid_issues) + len(suspect_issues) + len(empty_issues)
+                        if total_issues > 0:
+                            if invalid_issues:
+                                st.error(f"🚫 Found {len(invalid_issues)} invalid skip logic expressions")
+                            if suspect_issues:
+                                st.warning(f"⚠️ Found {len(suspect_issues)} suspect skip logic expressions")
+                            if empty_issues:
+                                st.info(f"ℹ️ Found {len(empty_issues)} empty skip logic fields")
+                            
+                            with st.expander(f"📋 View Skip Logic Issues ({total_issues} total)", expanded=False):
+                                if invalid_issues:
+                                    st.subheader("🚫 Invalid Skip Logic")
+                                    for issue in invalid_issues:
+                                        st.markdown(f"**Question:** {issue['question_label']}")
+                                        st.code(issue['expression'], language='text')
+                                        for problem in issue['issues']:
+                                            st.markdown(f"• {problem}")
+                                        st.markdown("---")
+                                
+                                if suspect_issues:
+                                    st.subheader("⚠️ Suspect Skip Logic")
+                                    for issue in suspect_issues:
+                                        st.markdown(f"**Question:** {issue['question_label']}")
+                                        st.code(issue['expression'], language='text')
+                                        for problem in issue['issues']:
+                                            st.markdown(f"• {problem}")
+                                        st.markdown("---")
+                                
+                                if empty_issues:
+                                    st.subheader("ℹ️ Empty Skip Logic")
+                                    for issue in empty_issues:
+                                        st.markdown(f"**Question:** {issue['question_label']}")
+                                        st.markdown("• Skip logic field is empty or contains only whitespace")
+                                        st.markdown("---")
+                    else:
+                        st.success("✅ All skip logic expressions are valid")
 
                     # Add generation stats
                     stat_cols = st.columns(3)

@@ -61,6 +61,9 @@ option_sets = None
 # Initialize ALL_QUESTIONS_ANSWERS as an empty list
 ALL_QUESTIONS_ANSWERS = []
 
+# Initialize SKIP_LOGIC_VALIDATION_RESULTS to track validation issues
+SKIP_LOGIC_VALIDATION_RESULTS = []
+
 def read_excel_skip_strikeout(filepath, sheet_name=0, header_row=1):
     """
     Reads an Excel sheet, skipping any row that has strikethrough formatting
@@ -703,6 +706,76 @@ def build_skip_logic_expression(expression: str, questions_answers) -> str:
     return f"Invalid expression format: '{expression}'"
 
 
+def get_skip_logic_validation_results():
+    """
+    Get the current skip logic validation results.
+    
+    Returns:
+        list: List of validation results with status, expression, and issues
+    """
+    return SKIP_LOGIC_VALIDATION_RESULTS.copy()
+
+
+def validate_skip_logic_expression(expression: str, questions_answers, question_label: str = ""):
+    """
+    Validate a skip logic expression and return detailed validation info.
+    
+    Args:
+        expression (str): The skip logic expression to validate
+        questions_answers: List of questions and answers for validation
+        question_label (str): The label of the question this skip logic applies to
+    
+    Returns:
+        dict: Validation result with status, expression, and issues
+    """
+    if not expression or str(expression).strip() == "":
+        return {
+            'status': 'empty',
+            'expression': expression,
+            'question_label': question_label,
+            'processed_expression': None,
+            'issues': ['Skip logic is empty or contains only whitespace']
+        }
+    
+    # Try to build the expression
+    processed_expression = build_skip_logic_expression(expression, questions_answers)
+    
+    validation_result = {
+        'status': 'valid',
+        'expression': expression,
+        'question_label': question_label,
+        'processed_expression': processed_expression,
+        'issues': []
+    }
+    
+    # Check if the expression is invalid
+    if processed_expression.startswith("Invalid expression format"):
+        validation_result['status'] = 'invalid'
+        validation_result['issues'].append(f"Unrecognized skip logic format: '{expression}'")
+        validation_result['issues'].append("Expected formats: [Question] !== 'Value' or [Question] !== {'Value1', 'Value2'}")
+    
+    # Check for potential issues even in valid expressions
+    if validation_result['status'] == 'valid':
+        # Check for missing question references
+        import re
+        question_refs = re.findall(r'\[([^\]]+)\]', expression)
+        for ref in question_refs:
+            # Check if referenced question exists
+            question_found = False
+            for q in questions_answers:
+                if (q.get('question_label', '').strip() == ref.strip() or 
+                    q.get('question_id', '').strip() == ref.strip()):
+                    question_found = True
+                    break
+            
+            if not question_found:
+                validation_result['issues'].append(f"Referenced question '[{ref}]' not found in form")
+                if validation_result['status'] == 'valid':
+                    validation_result['status'] = 'suspect'
+    
+    return validation_result
+
+
 def should_render_workspace(question_rendering):
     """
     Check if a workspace should be rendered
@@ -916,14 +989,30 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
     if SKIP_LOGIC_COLUMN in columns and pd.notnull(safe_extract_value(row[SKIP_LOGIC_COLUMN])):
         # Update skip logic expression with modified IDs
         skip_logic = safe_extract_value(row[SKIP_LOGIC_COLUMN])
+        original_skip_logic = skip_logic  # Keep original for validation reporting
         
         # Skip if skip logic is empty or just whitespace
         if not skip_logic or str(skip_logic).strip() == "":
-            pass
+            # Track empty skip logic
+            SKIP_LOGIC_VALIDATION_RESULTS.append({
+                'status': 'empty',
+                'expression': skip_logic,
+                'question_label': original_label or safe_extract_value(row[QUESTION_COLUMN]),
+                'processed_expression': None,
+                'issues': ['Skip logic is empty or contains only whitespace']
+            })
         else:
             for original_label, modified_id in ID_MODIFICATIONS.items():
                 # Replace the original label in skip logic with the modified ID
                 skip_logic = skip_logic.replace(f"[{original_label}]", f"[{modified_id}]")
+
+            # Validate skip logic and collect results
+            validation_result = validate_skip_logic_expression(
+                original_skip_logic, 
+                ALL_QUESTIONS_ANSWERS, 
+                original_label or safe_extract_value(row[QUESTION_COLUMN])
+            )
+            SKIP_LOGIC_VALIDATION_RESULTS.append(validation_result)
 
             hide_expression = build_skip_logic_expression(skip_logic, ALL_QUESTIONS_ANSWERS)
             if not hide_expression.startswith("Invalid expression format"):
@@ -1022,8 +1111,9 @@ def generate_form(sheet_name, form_translations, metadata_file=None):
             where missing_option_sets is a list of dictionaries with information about missing optionSets.
     """
     # Reset the global ALL_QUESTIONS_ANSWERS list and ID modifications tracking
-    global ALL_QUESTIONS_ANSWERS
+    global ALL_QUESTIONS_ANSWERS, SKIP_LOGIC_VALIDATION_RESULTS
     ALL_QUESTIONS_ANSWERS = []
+    SKIP_LOGIC_VALIDATION_RESULTS = []
     reset_id_modifications()
 
     # Track missing optionSets
@@ -1120,7 +1210,10 @@ def generate_form(sheet_name, form_translations, metadata_file=None):
                 "questions": questions
             })
 
-    return form_data, concept_ids_set, count_total_questions, count_total_answers, missing_option_sets
+    # Get skip logic validation results before returning
+    skip_logic_issues = get_skip_logic_validation_results()
+    
+    return form_data, concept_ids_set, count_total_questions, count_total_answers, missing_option_sets, skip_logic_issues
 
 def generate_translation_file(form_name, language, translations_list):
     """
