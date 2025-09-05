@@ -760,11 +760,38 @@ def validate_skip_logic_expression(expression: str, questions_answers, question_
         import re
         question_refs = re.findall(r'\[([^\]]+)\]', expression)
         for ref in question_refs:
-            # Check if referenced question exists
+            # Check if referenced question exists with comprehensive matching
             question_found = False
+            ref_normalized = ref.strip().lower()
+            
             for q in questions_answers:
-                if (q.get('question_label', '').strip() == ref.strip() or 
-                    q.get('question_id', '').strip() == ref.strip()):
+                # Try multiple matching strategies
+                question_label = q.get('question_label', '').strip().lower()
+                question_id = q.get('question_id', '').strip().lower()
+                original_text = q.get('original_question_text', '').strip().lower()
+                
+                # Strategy 1: Exact match (case-insensitive)
+                if (ref_normalized == question_label or 
+                    ref_normalized == question_id or 
+                    ref_normalized == original_text):
+                    question_found = True
+                    break
+                
+                # Strategy 2: Try generating question ID from the reference to match processed IDs
+                try:
+                    ref_as_id, _, _ = manage_id(ref)
+                    if ref_as_id.lower() == question_id:
+                        question_found = True
+                        break
+                except:
+                    pass  # If manage_id fails, continue with other strategies
+                
+                # Strategy 3: Check if reference is similar to original text (handle minor differences)
+                # Remove common prefixes/suffixes and normalize
+                ref_cleaned = re.sub(r'^\d+[\.\s]*', '', ref).strip().lower()
+                original_cleaned = re.sub(r'^\d+[\.\s]*', '', q.get('original_question_text', '')).strip().lower()
+                
+                if ref_cleaned and original_cleaned and ref_cleaned == original_cleaned:
                     question_found = True
                     break
             
@@ -894,6 +921,7 @@ def generate_question(row, columns, question_translations, missing_option_sets=N
     question_entry = {
         "question_id": question_id,
         "question_label": original_label,
+        "original_question_text": original_question_label,  # Store original CSV question text for skip logic validation
         "questionOptions": {"answers": [], "rendering": question_rendering}
     }
     ALL_QUESTIONS_ANSWERS.append(question_entry)
