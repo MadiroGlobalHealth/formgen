@@ -1,6 +1,6 @@
 {
     "columns": {
-        "TOOLTIP_COLUMN_NAME": "Tooltip",
+        "TOOLTIP_COLUMN_NAME": "Tooltip i",
         "TRANSLATION_SECTION_COLUMN": "Translation - Section",
         "TRANSLATION_QUESTION_COLUMN": "Translation - Question",
         "TRANSLATION_TOOLTIP_COLUMN": "Translation - Tooltip",
